@@ -48,7 +48,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   body: {fileID: 8376373762312592757}
   rotationPoint: {fileID: 3447093911400346816}
+  firingPoint: {fileID: 3723515643616481672}
   moveSpeedPerSecond: 8.98
+  timeBetweenShots: 0.2
+  projectilePF: {fileID: 8442961825726286169, guid: 6606b73f9e4922c4c94b708b9fc3f1f2, type: 3}
   deviceDisplayNameLabel: 
 --- !u!50 &8376373762312592757
 Rigidbody2D:
@@ -217,6 +220,7 @@ Transform:
   m_Children:
   - {fileID: 3330167432383780388}
   - {fileID: 6799243234591492465}
+  - {fileID: 3723515643616481672}
   m_Father: {fileID: 730345043262914716}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -268,3 +272,34 @@ CircleCollider2D:
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
   m_Radius: 0.15
+--- !u!1 &9005510807859758238
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3723515643616481672}
+  m_Layer: 0
+  m_Name: Firing Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3723515643616481672
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9005510807859758238}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.28, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3447093911400346816}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

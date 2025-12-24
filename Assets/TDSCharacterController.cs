@@ -13,6 +13,8 @@ public class TDSCharacterController : MonoBehaviour
     private Rigidbody2D body;
     [SerializeReference]
     private Transform rotationPoint;
+    [SerializeReference]
+    private Transform firingPoint;
     [SerializeField]
     private float moveSpeedPerSecond = 5f;
 
@@ -25,6 +27,13 @@ public class TDSCharacterController : MonoBehaviour
     /// Any mouse movement detected will set this from false to true.
     /// </summary>
     private bool useMousePosition { get; set; } = false;
+    private Vector2 aimingDirection { get; set; }
+
+    [SerializeField]
+    private float timeBetweenShots = .5f;
+    private float curTimeBetweenShots { get; set; } = 0f;
+    [SerializeReference]
+    private Projectile projectilePF;
 
     [SerializeField]
     private string deviceDisplayNameLabel;
@@ -50,6 +59,7 @@ public class TDSCharacterController : MonoBehaviour
     {
         this.HandleFixedMovement();
         this.HandleFacingAndAiming();
+        this.HandleFiring();
     }
 
     void HandleFixedMovement()
@@ -69,8 +79,10 @@ public class TDSCharacterController : MonoBehaviour
         {
             Vector2 mouseScreenPosition = this.playerControls.Gameplay.MousePosition.ReadValue<Vector2>();
             Vector2 cameraWorldPosition = Camera.main.ScreenToWorldPoint(mouseScreenPosition);
-            float angleToLook = Vector2.SignedAngle(cameraWorldPosition - this.body.position, Vector2.up);
+            Vector2 positionDifference = cameraWorldPosition - this.body.position;
+            float angleToLook = Vector2.SignedAngle(positionDifference, Vector2.up);
             this.rotationPoint.transform.rotation = Quaternion.Euler(0, 0, -angleToLook);
+            this.aimingDirection = positionDifference.normalized;
         }
         else
         {
@@ -82,7 +94,31 @@ public class TDSCharacterController : MonoBehaviour
             Vector2 lookPosition = this.playerControls.Gameplay.Look.ReadValue<Vector2>();
             float angleToLook = Vector2.SignedAngle(lookPosition, Vector2.up);
             this.rotationPoint.transform.rotation = Quaternion.Euler(0, 0, -angleToLook);
+            this.aimingDirection = lookPosition.normalized;
         }
+    }
+
+    void HandleFiring()
+    {
+        if (this.curTimeBetweenShots > 0)
+        {
+            this.curTimeBetweenShots -= Time.deltaTime;
+
+            if (this.curTimeBetweenShots > 0)
+            {
+                return;
+            }
+        }
+
+        if (!this.playerControls.Gameplay.Fire.IsPressed())
+        {
+            return;
+        }
+
+        this.curTimeBetweenShots = this.timeBetweenShots;
+        Projectile newProjectile = Instantiate(this.projectilePF);
+        newProjectile.transform.position = this.firingPoint.position;
+        newProjectile.StartProjectile(this.aimingDirection);
     }
 
     void MouseMovementDetected(InputAction.CallbackContext context)

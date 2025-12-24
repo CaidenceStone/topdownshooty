@@ -1,0 +1,182 @@
+using System.Collections;
+using System.Collections.Generic;
+using System.Net;
+using System.Text;
+using Unity.VisualScripting;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UIElements;
+
+public class TDSCharacterController : Entity
+{
+    [SerializeReference]
+    private Transform rotationPoint;
+    [SerializeReference]
+    private Transform firingPoint;
+    [SerializeField]
+    private float moveSpeedPerSecond = 5f;
+    [SerializeField]
+    private float aimingCenterMaximumOffset = 2f;
+
+    private @PlayerControls playerControls { get; set; }
+
+    /// <summary>
+    /// True: Use MousePosition for determining where to aim.
+    /// Any Look use will set this from true to false.
+    /// False: Use Look for determining where to aim.
+    /// Any mouse movement detected will set this from false to true.
+    /// </summary>
+    private bool useMousePosition { get; set; } = false;
+    private Vector2 aimingDirection { get; set; }
+    private Vector2 aimingCenter { get; set; }
+
+    [SerializeField]
+    private string deviceDisplayNameLabel;
+    [SerializeReference]
+    public WeaponCollection OwnWeaponCollection;
+
+    protected override void Start()
+    {
+        base.Start();
+
+        this.OwnWeaponCollection.InitializeWeaponCollection(this);
+    }
+
+    public Vector2 VisualAimingCenter
+    {
+        get
+        {
+            return this.Body.position + this.aimingDirection * Mathf.Clamp(Vector3.Distance(this.Body.position, this.aimingCenter), 0f, this.aimingCenterMaximumOffset);
+        }
+    }
+
+    public void SetDevices(InputDevice[] devices)
+    {
+        this.playerControls = new PlayerControls() { devices = new UnityEngine.InputSystem.Utilities.ReadOnlyArray<InputDevice>(devices) };
+        this.playerControls.Gameplay.MousePosition.performed += this.MouseMovementDetected;
+        this.playerControls.Gameplay.Look.performed += this.LookDetected;
+        this.playerControls.Enable();
+
+        StringBuilder deviceNames = new StringBuilder();
+        string commaSeparator = "";
+        foreach (InputDevice device in devices) 
+        {
+            deviceNames.Append(commaSeparator + device.displayName);
+            commaSeparator = ", ";
+        }
+
+        this.deviceDisplayNameLabel = deviceNames.ToString();
+    }
+
+    protected override void TickDownTimers()
+    {
+        base.TickDownTimers();
+        this.OwnWeaponCollection.TickDownTimers();
+    }
+
+    protected override void InputUpdates()
+    {
+        base.InputUpdates();
+
+        this.HandleFacingAndAiming();
+        this.HandleCycleWeapons();
+    }
+
+    protected override void BehaviourUpdate()
+    {
+        base.BehaviourUpdate();
+
+        this.HandleFixedMovement();
+        this.HandleFiring();
+    }
+
+    void HandleFixedMovement()
+    {
+        if (this.playerControls.Gameplay.Move.IsPressed())
+        {
+            Vector2 movement = this.playerControls.Gameplay.Move.ReadValue<Vector2>();
+            movement = Vector2.ClampMagnitude(movement, 1f);
+            Vector2 distanceMoving = movement * this.moveSpeedPerSecond * Time.deltaTime;
+            this.MoveEntity(distanceMoving);
+        }
+    }
+
+    void HandleFacingAndAiming()
+    {
+        if (useMousePosition)
+        {
+            Vector2 mouseScreenPosition = this.playerControls.Gameplay.MousePosition.ReadValue<Vector2>();
+            Vector2 cameraWorldPosition = Camera.main.ScreenToWorldPoint(mouseScreenPosition);
+            Vector2 positionDifference = cameraWorldPosition - this.Body.position;
+            float angleToLook = Vector2.SignedAngle(positionDifference, Vector2.up);
+            this.rotationPoint.transform.rotation = Quaternion.Euler(0, 0, -angleToLook);
+            this.aimingDirection = positionDifference.normalized;
+            this.aimingCenter = cameraWorldPosition;
+        }
+        else
+        {
+            if (!this.playerControls.Gameplay.Look.IsPressed())
+            {
+                return;
+            }
+
+            Vector2 lookPosition = this.playerControls.Gameplay.Look.ReadValue<Vector2>();
+            float angleToLook = Vector2.SignedAngle(lookPosition, Vector2.up);
+            this.rotationPoint.transform.rotation = Quaternion.Euler(0, 0, -angleToLook);
+            this.aimingDirection = lookPosition.normalized;
+            this.aimingCenter = this.Body.position + lookPosition * this.aimingCenterMaximumOffset;
+        }
+    }
+
+    void HandleCycleWeapons()
+    {
+        if (this.playerControls.Gameplay.CycleWeaponRight.WasPressedThisFrame())
+        {
+            this.OwnWeaponCollection.CycleWeapons(1);
+        }
+        else if (this.playerControls.Gameplay.CycleWeaponLeft.WasPressedThisFrame())
+        {
+            this.OwnWeaponCollection.CycleWeapons(-1);
+        }
+    }
+
+    void HandleFiring()
+    {
+        if (this.playerControls.Gameplay.Fire.IsPressed())
+        {
+            this.OwnWeaponCollection.GetCurrentWeapon().FireInDirection(this.aimingDirection);
+        }
+    }
+
+    void MouseMovementDetected(InputAction.CallbackContext context)
+    {
+        this.useMousePosition = true;
+    }
+
+    void LookDetected(InputAction.CallbackContext context)
+    {
+        this.useMousePosition = false;
+    }
+
+    public override void MarkForDestruction()
+    {
+        Debug.Log($"Player defeated");
+        this.ShouldDestroy = true;
+        this.gameObject.SetActive(false);
+    }
+
+    protected override void HandleDestroy()
+    {
+
+    }
+
+    private void OnEnable()
+    {
+        TDSCamera.RegisterFollowing(this);
+    }
+
+    private void OnDisable()
+    {
+        TDSCamera.UnregisterFollowing(this);
+    }
+}

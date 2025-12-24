@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class Entity : MonoBehaviour
 {
+    const float PLANCKCOLLISIONDISTANCE = .001f;
+
     [SerializeReference]
     public Rigidbody2D Body;
     [SerializeField]
@@ -186,7 +188,7 @@ public class Entity : MonoBehaviour
             float currentImpact = thisEvent.GetImpactAtCurrentTime();
             float currentImpactAtTime = thisEvent.Impact * Time.deltaTime;
 
-            this.Body.position += thisEvent.OriginalDirection * currentImpactAtTime;
+            this.MoveEntity(thisEvent.OriginalDirection * currentImpactAtTime);
 
             if (thisEvent.RemainingTime < 0)
             {
@@ -211,7 +213,8 @@ public class Entity : MonoBehaviour
         RaycastHit2D hit = Physics2D.Raycast(this.Body.position, movement.normalized, movement.magnitude, this.environmentMask.value);
         if (hit.collider != null)
         {
-            this.Body.position = hit.point;
+            Vector2 differenceInPosition = (hit.point - this.Body.position).normalized;
+            this.Body.position = hit.point - differenceInPosition * PLANCKCOLLISIONDISTANCE;
             return;
         }
 

@@ -15,6 +15,8 @@ public class TDSCharacterController : Entity
     private Transform firingPoint;
     [SerializeField]
     private float moveSpeedPerSecond = 5f;
+    [SerializeField]
+    private float aimingCenterMaximumOffset = 2f;
 
     private @PlayerControls playerControls { get; set; }
 
@@ -26,6 +28,7 @@ public class TDSCharacterController : Entity
     /// </summary>
     private bool useMousePosition { get; set; } = false;
     private Vector2 aimingDirection { get; set; }
+    private Vector2 aimingCenter { get; set; }
 
     [SerializeField]
     private float timeBetweenShots = .5f;
@@ -35,6 +38,14 @@ public class TDSCharacterController : Entity
 
     [SerializeField]
     private string deviceDisplayNameLabel;
+
+    public Vector2 VisualAimingCenter
+    {
+        get
+        {
+            return this.Body.position + this.aimingDirection * Mathf.Clamp(Vector3.Distance(this.Body.position, this.aimingCenter), 0f, this.aimingCenterMaximumOffset);
+        }
+    }
 
     public void SetDevices(InputDevice[] devices)
     {
@@ -91,6 +102,7 @@ public class TDSCharacterController : Entity
             float angleToLook = Vector2.SignedAngle(positionDifference, Vector2.up);
             this.rotationPoint.transform.rotation = Quaternion.Euler(0, 0, -angleToLook);
             this.aimingDirection = positionDifference.normalized;
+            this.aimingCenter = cameraWorldPosition;
         }
         else
         {
@@ -103,6 +115,7 @@ public class TDSCharacterController : Entity
             float angleToLook = Vector2.SignedAngle(lookPosition, Vector2.up);
             this.rotationPoint.transform.rotation = Quaternion.Euler(0, 0, -angleToLook);
             this.aimingDirection = lookPosition.normalized;
+            this.aimingCenter = this.Body.position + lookPosition * this.aimingCenterMaximumOffset;
         }
     }
 
@@ -144,5 +157,15 @@ public class TDSCharacterController : Entity
     protected override void HandleDestroy()
     {
 
+    }
+
+    private void OnEnable()
+    {
+        TDSCamera.RegisterFollowing(this);
+    }
+
+    private void OnDisable()
+    {
+        TDSCamera.UnregisterFollowing(this);
     }
 }

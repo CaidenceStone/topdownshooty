@@ -1,11 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEditor.Build;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 
 public class Entity : MonoBehaviour
 {
-    const float PLANCKCOLLISIONDISTANCE = .001f;
+    const int MAXIMUMSLIDEITERATIONS = 10;
+    const float PLANCKCOLLISIONDISTANCE = .01f;
 
     [SerializeReference]
     public Rigidbody2D Body;
@@ -209,16 +212,82 @@ public class Entity : MonoBehaviour
 
     protected virtual void MoveEntity(Vector2 movement)
     {
-        // If there is a wall in that direction, you can only move up to the wall
-        RaycastHit2D hit = Physics2D.Raycast(this.Body.position, movement.normalized, movement.magnitude, this.environmentMask.value);
-        if (hit.collider != null)
+        RaycastHit2D[] hits = new RaycastHit2D[1];
+
+        // Sub-function that splits movement in to separate horizontal and vertical axes
+        // Returns the remaining amount of available movement
+        bool MoveEntitySlideIteration(Vector2 iterationMovement, out Vector2 remainingMovement)
         {
-            Vector2 differenceInPosition = (hit.point - this.Body.position).normalized;
-            this.Body.position = hit.point - differenceInPosition * PLANCKCOLLISIONDISTANCE;
-            return;
+            bool anyChanged = false;
+            remainingMovement = iterationMovement;
+
+            if (!Mathf.Approximately(iterationMovement.x, 0) && SlideAxis(Vector2.right, iterationMovement.x, out float remainingDistance))
+            {
+                remainingMovement.x = remainingDistance;
+                anyChanged = true;
+            }
+            
+            if (!Mathf.Approximately(iterationMovement.y, 0) && SlideAxis(Vector2.up, iterationMovement.y, out remainingDistance))
+            {
+                remainingMovement.y = remainingDistance;
+                anyChanged = true;
+            }
+
+            return anyChanged;
         }
 
-        // Otherwise, move the full distance
-        this.Body.position += movement;
+        bool SlideAxis(Vector2 axis, float distance, out float remainingDistance)
+        {
+            if (Mathf.Approximately(distance, 0))
+            {
+                remainingDistance = 0;
+                return false;
+            }
+
+            remainingDistance = distance;            
+            if (this.Body.Cast(new Vector2(axis.x * Mathf.Sign(distance), axis.y * Mathf.Sign(distance)), new ContactFilter2D() { layerMask = this.environmentMask }, hits, Mathf.Abs(distance)) > 0)
+            {
+                float posDifference = hits[0].distance;
+
+                if (posDifference > PLANCKCOLLISIONDISTANCE)
+                {
+                    remainingDistance = Mathf.MoveTowards(distance, 0f, posDifference);
+                    this.Body.position += axis * Mathf.Sign(distance) * (Mathf.MoveTowards(posDifference, 0, PLANCKCOLLISIONDISTANCE));
+
+                    return true;
+                }
+
+                return false;
+            }
+            else
+            {
+                this.Body.position += axis * distance;
+                remainingDistance = 0;
+                return true;
+            }
+        }
+
+        if (this.Body.Cast(movement, new ContactFilter2D() { layerMask = this.environmentMask }, hits, movement.magnitude) > 0)
+        {
+            Vector2 slideRemaining = movement;
+            for (int ii = 0; ii < MAXIMUMSLIDEITERATIONS; ii++)
+            {
+                Vector2 initialRemainingSlide = slideRemaining;
+                if (!MoveEntitySlideIteration(initialRemainingSlide, out slideRemaining))
+                {
+                    break;
+                }
+                if (Mathf.Approximately(slideRemaining.x, 0) && Mathf.Approximately(slideRemaining.y, 0))
+                {
+                    break;
+                }
+            }
+            return;
+        }
+        else
+        {
+            // Otherwise, move the full distance
+            this.Body.position += movement;
+        }
     }
 }

@@ -55,7 +55,17 @@ public class TDSCharacterController : Entity
         this.deviceDisplayNameLabel = deviceNames.ToString();
     }
 
-    private void FixedUpdate()
+    protected override void TickDownTimers()
+    {
+        base.TickDownTimers();
+
+        if (this.curTimeBetweenShots > 0)
+        {
+            this.curTimeBetweenShots -= Time.deltaTime;
+        }
+    }
+
+    protected override void BehaviourUpdate()
     {
         this.HandleFixedMovement();
         this.HandleFacingAndAiming();
@@ -102,12 +112,7 @@ public class TDSCharacterController : Entity
     {
         if (this.curTimeBetweenShots > 0)
         {
-            this.curTimeBetweenShots -= Time.deltaTime;
-
-            if (this.curTimeBetweenShots > 0)
-            {
-                return;
-            }
+            return;
         }
 
         if (!this.playerControls.Gameplay.Fire.IsPressed())
@@ -129,5 +134,17 @@ public class TDSCharacterController : Entity
     void LookDetected(InputAction.CallbackContext context)
     {
         this.useMousePosition = false;
+    }
+
+    public override void MarkForDestruction()
+    {
+        Debug.Log($"Player defeated");
+        this.ShouldDestroy = true;
+        this.gameObject.SetActive(false);
+    }
+
+    protected override void HandleDestroy()
+    {
+
     }
 }

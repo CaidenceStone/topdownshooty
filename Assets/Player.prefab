@@ -46,7 +46,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bb026bf23cf652439bf1885c80b0ece, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  body: {fileID: 8376373762312592757}
+  Body: {fileID: 8376373762312592757}
   projectileMask:
     serializedVersion: 2
     m_Bits: 64
@@ -89,6 +89,7 @@ MonoBehaviour:
   damageFlickerColorAtMaximum: {r: 1, g: 0.21176471, b: 0.5176471, a: 1}
   renderersToFlickerDuringDamage:
   - {fileID: 8489688724864425805}
+  timeBetweenRethinks: 0
   Body: {fileID: 8376373762312592757}
   rotationPoint: {fileID: 3447093911400346816}
   firingPoint: {fileID: 3723515643616481672}

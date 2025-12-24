@@ -13,16 +13,24 @@ public class Projectile : MonoBehaviour
 
     [SerializeField]
     public decimal Damage = 1.0M;
+    [SerializeField]
+    public float Impact = 5f;
+    [SerializeField]
+    public float ImpactTime = 1f;
+    [SerializeField]
+    public AnimationCurve ImpactOverTime;
+    [SerializeField]
+    public float HitStunTime = .05f;
 
     public Faction MyFaction { get; private set; }
 
-    private Vector2 firingAngle { get; set; }
+    public Vector2 FiringAngle { get; private set; }
 
     private bool shouldDestroy { get; set; } = false;
 
     public void StartProjectile(Vector2 startFiringAngle, Faction ofFaction)
     {
-        this.firingAngle = startFiringAngle;
+        this.FiringAngle = startFiringAngle;
         float angleToLook = Vector2.SignedAngle(startFiringAngle, Vector2.up);
         this.rotationPoint.transform.rotation = Quaternion.Euler(0, 0, -angleToLook);
         this.MyFaction = ofFaction;
@@ -36,7 +44,7 @@ public class Projectile : MonoBehaviour
             return;
         }
 
-        this.body.position += firingAngle * movementSpeed * Time.deltaTime;
+        this.body.position += FiringAngle * movementSpeed * Time.deltaTime;
     }
 
     public void Destroy()

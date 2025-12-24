@@ -73,7 +73,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: b5c08815c6882d04d8662bd5718b6850, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 225aa392d93edd144a3d1d52d4695261, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -187,7 +187,7 @@ GameObject:
   - component: {fileID: 243841110668817868}
   - component: {fileID: 8442961825726286169}
   m_Layer: 6
-  m_Name: Projectile
+  m_Name: EnemyProjectile
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -245,3 +245,39 @@ MonoBehaviour:
   body: {fileID: 243841110668817868}
   rotationPoint: {fileID: 2323638291096199031}
   movementSpeed: 10
+  Impact: 3
+  ImpactTime: 0.2
+  ImpactOverTime:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: -0.012867826
+      outSlope: -0.012867826
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.1791267
+    - serializedVersion: 3
+      time: 0.75
+      value: 1
+      inSlope: -0.001862721
+      outSlope: -0.001862721
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.26430923
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  HitStunTime: 0.05

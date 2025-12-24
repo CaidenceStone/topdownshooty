@@ -1,11 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Entity : MonoBehaviour
 {
     [SerializeReference]
-    protected Rigidbody2D body;
+    public Rigidbody2D Body;
     [SerializeField]
     protected LayerMask projectileMask;
     [SerializeField]
@@ -14,7 +15,7 @@ public class Entity : MonoBehaviour
 
     [SerializeField]
     public Faction MyFaction;
-    protected bool shouldDestroy { get; set; } = false;
+    public bool ShouldDestroy { get; set; } = false;
 
     [SerializeField]
     private float damageFlickerTime = .2f;
@@ -27,12 +28,69 @@ public class Entity : MonoBehaviour
     [SerializeReference]
     private SpriteRenderer[] renderersToFlickerDuringDamage;
 
+    private readonly List<ImpactEvent> processingImpactEvents = new List<ImpactEvent>();
+
+    private float? curHitStunTime { get; set; } = 0;
+
+    [SerializeReference]
+    private float timeBetweenRethinks;
+    private float curTimeBetweenRethinks { get; set; } = 0;
+
+    public bool IsInHitStun
+    {
+        get
+        {
+            return this.curHitStunTime.HasValue;
+        }
+    }
+
     private Coroutine curDamageFlickerCoroutine { get; set; } = null;
 
     protected virtual void Start()
     {
         this.CurrentHP = this.MaximumHP;
     }
+
+    protected void FixedUpdate()
+    {
+        if (this.ShouldDestroy)
+        {
+            this.HandleDestroy();
+            return;
+        }
+
+        this.HandleImpactEvents();
+        this.TickDownTimers();
+
+        if (this.IsInHitStun)
+        {
+            this.curHitStunTime -= Time.deltaTime;
+            if (this.curHitStunTime < 0)
+            {
+                this.curHitStunTime = null;
+            }
+
+            return;
+        }
+
+        if (this.curTimeBetweenRethinks < 0)
+        {
+            this.curTimeBetweenRethinks = this.timeBetweenRethinks;
+            this.Rethink();
+        }
+
+        this.BehaviourUpdate();
+    }
+
+    protected virtual void TickDownTimers()
+    {
+        this.curTimeBetweenRethinks -= Time.deltaTime;
+    }
+
+    protected virtual void BehaviourUpdate()
+    {
+    }
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if ((this.projectileMask & (1 << collision.gameObject.layer)) != 0)
@@ -53,13 +111,20 @@ public class Entity : MonoBehaviour
         }
 
         this.TakeDamage(projectile.Damage);
-        projectile.Destroy();
 
+        if (projectile.HitStunTime > 0)
+        {
+            this.curHitStunTime = projectile.HitStunTime;
+        }
+
+        this.RegisterImpactEvent(new ImpactEvent(projectile.FiringAngle, projectile.ImpactTime, projectile.Impact, projectile.ImpactOverTime));
+
+        projectile.Destroy();
     }
 
-    public void Destroy()
+    public virtual void MarkForDestruction()
     {
-        this.shouldDestroy = true;
+        this.ShouldDestroy = true;
     }
 
     public void TakeDamage(decimal damageAmount)
@@ -68,7 +133,7 @@ public class Entity : MonoBehaviour
 
         if (this.CurrentHP <= 0)
         {
-            this.Destroy();
+            this.MarkForDestruction();
         }
         else
         {
@@ -102,5 +167,39 @@ public class Entity : MonoBehaviour
         {
             this.renderersToFlickerDuringDamage[ii].color = Color.white;
         }
+    }
+
+    public void RegisterImpactEvent(ImpactEvent impactEvent)
+    {
+        this.processingImpactEvents.Add(impactEvent);
+    }
+
+    void HandleImpactEvents()
+    {
+        for (int ii = this.processingImpactEvents.Count - 1; ii >= 0; ii--)
+        {
+            ImpactEvent thisEvent = this.processingImpactEvents[ii];
+            thisEvent.RemainingTime -= Time.deltaTime;
+
+            float currentImpact = thisEvent.GetImpactAtCurrentTime();
+            float currentImpactAtTime = thisEvent.Impact * Time.deltaTime;
+
+            this.Body.position += thisEvent.OriginalDirection * currentImpactAtTime;
+
+            if (thisEvent.RemainingTime < 0)
+            {
+                this.processingImpactEvents.RemoveAt(ii);
+            }
+        }
+    }
+
+    protected virtual void Rethink()
+    {
+
+    } 
+
+    protected virtual void HandleDestroy()
+    {
+        Destroy(this.gameObject);
     }
 }

@@ -9,10 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5134499097567795553}
-  - component: {fileID: 3307841845486508968}
+  - component: {fileID: 7209317087632798729}
   - component: {fileID: 317968690895209869}
   m_Layer: 7
-  m_Name: Enemy
+  m_Name: Projectile Firing Enemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -34,7 +34,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3307841845486508968
+--- !u!114 &7209317087632798729
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -43,7 +43,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 445752688989285767}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 96be516f34a13694ebd367ac1c0654f0, type: 3}
+  m_Script: {fileID: 11500000, guid: f02995fd16463924b8e2c696b486c299, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   Body: {fileID: 317968690895209869}
@@ -86,14 +86,18 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   damageFlickerColorAtMinimum: {r: 1, g: 1, b: 1, a: 1}
-  damageFlickerColorAtMaximum: {r: 1, g: 0.21226418, b: 0.5192869, a: 1}
+  damageFlickerColorAtMaximum: {r: 1, g: 0.21176471, b: 0.5176471, a: 1}
   renderersToFlickerDuringDamage:
   - {fileID: 2073253218314875726}
-  timeBetweenRethinks: 0.5
+  timeBetweenRethinks: 0.3
   movementSpeedPerSecond: 3
   randomPlayerPositionOffset: 1
-  minDesiredDistanceFromPlayer: 5
-  maxDesiredDistanceFromPlayer: 10
+  minDesiredDistanceFromPlayer: 3
+  maxDesiredDistanceFromPlayer: 7
+  firingPoint: {fileID: 949184130567544330}
+  projectilePF: {fileID: 8442961825726286169, guid: 2b080969317fd3a40b0adf7443426dbd, type: 3}
+  timeBetweenProjectiles: 1
+  maximumSpread: 0.2
 --- !u!50 &317968690895209869
 Rigidbody2D:
   serializedVersion: 4

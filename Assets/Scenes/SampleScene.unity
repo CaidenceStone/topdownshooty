@@ -152,7 +152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd9dc7bce5ecaba4a959084812253005, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyPF: {fileID: 3307841845486508968, guid: 13a563c6c92556742af791063675d6a8, type: 3}
+  enemyPF: {fileID: 7209317087632798729, guid: 19f703beb174fed488e9ea066bfda54b, type: 3}
   secondsBetweenEnemySpawns: 1
   distanceToSpawnEnemyAt: 10
 --- !u!4 &166806126

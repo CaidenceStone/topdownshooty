@@ -50,6 +50,9 @@ MonoBehaviour:
   projectileMask:
     serializedVersion: 2
     m_Bits: 64
+  environmentMask:
+    serializedVersion: 2
+    m_Bits: 256
   MyFaction: 2
   damageFlickerTime: 0.2
   damageFlickerColorOverTime:
@@ -97,6 +100,7 @@ MonoBehaviour:
   firingPoint: {fileID: 949184130567544330}
   projectilePF: {fileID: 8442961825726286169, guid: 2b080969317fd3a40b0adf7443426dbd, type: 3}
   timeBetweenProjectiles: 1
+  randomStartSleepTimeModifierMax: 5
   maximumSpread: 0.2
 --- !u!50 &317968690895209869
 Rigidbody2D:

@@ -50,6 +50,9 @@ MonoBehaviour:
   projectileMask:
     serializedVersion: 2
     m_Bits: 64
+  environmentMask:
+    serializedVersion: 2
+    m_Bits: 256
   MyFaction: 1
   damageFlickerTime: 0.2
   damageFlickerColorOverTime:
@@ -90,7 +93,6 @@ MonoBehaviour:
   renderersToFlickerDuringDamage:
   - {fileID: 8489688724864425805}
   timeBetweenRethinks: 0
-  Body: {fileID: 8376373762312592757}
   rotationPoint: {fileID: 3447093911400346816}
   firingPoint: {fileID: 3723515643616481672}
   moveSpeedPerSecond: 8.98

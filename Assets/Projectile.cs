@@ -28,6 +28,9 @@ public class Projectile : MonoBehaviour
 
     private bool shouldDestroy { get; set; } = false;
 
+    [SerializeField]
+    private LayerMask environmentMask;
+
     public void StartProjectile(Vector2 startFiringAngle, Faction ofFaction)
     {
         this.FiringAngle = startFiringAngle;
@@ -50,5 +53,14 @@ public class Projectile : MonoBehaviour
     public void Destroy()
     {
         this.shouldDestroy = true;
+    }
+
+    public void OnCollisionEnter2D(Collision2D collision)
+    {
+        if ((this.environmentMask & (1 << collision.gameObject.layer)) != 0)
+        {
+            this.Destroy();
+            return;
+        }
     }
 }

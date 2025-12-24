@@ -281,3 +281,6 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   HitStunTime: 0.05
+  environmentMask:
+    serializedVersion: 2
+    m_Bits: 256

@@ -10,6 +10,8 @@ public class Entity : MonoBehaviour
     [SerializeField]
     protected LayerMask projectileMask;
     [SerializeField]
+    protected LayerMask environmentMask;
+    [SerializeField]
     public decimal MaximumHP = 5.0M;
     public decimal CurrentHP { get; protected set; }
 
@@ -201,5 +203,19 @@ public class Entity : MonoBehaviour
     protected virtual void HandleDestroy()
     {
         Destroy(this.gameObject);
+    }
+
+    protected virtual void MoveEntity(Vector2 movement)
+    {
+        // If there is a wall in that direction, you can only move up to the wall
+        RaycastHit2D hit = Physics2D.Raycast(this.Body.position, movement.normalized, movement.magnitude, this.environmentMask.value);
+        if (hit.collider != null)
+        {
+            this.Body.position = hit.point;
+            return;
+        }
+
+        // Otherwise, move the full distance
+        this.Body.position += movement;
     }
 }

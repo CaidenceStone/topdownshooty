@@ -10,8 +10,6 @@ using UnityEngine.UIElements;
 public class TDSCharacterController : Entity
 {
     [SerializeReference]
-    public Rigidbody2D Body;
-    [SerializeReference]
     private Transform rotationPoint;
     [SerializeReference]
     private Transform firingPoint;
@@ -79,7 +77,7 @@ public class TDSCharacterController : Entity
             Vector2 movement = this.playerControls.Gameplay.Move.ReadValue<Vector2>();
             movement = Vector2.ClampMagnitude(movement, 1f);
             Vector2 distanceMoving = movement * this.moveSpeedPerSecond * Time.deltaTime;
-            this.Body.position += distanceMoving;
+            this.MoveEntity(distanceMoving);
         }
     }
 

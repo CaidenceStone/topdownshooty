@@ -48,7 +48,7 @@ public class Enemy : Entity
 
         Vector2 distanceBetweenPoints = movingTowards - Body.position;
         Vector2 distanceToMove = Vector2.ClampMagnitude(distanceBetweenPoints, Time.deltaTime * this.movementSpeedPerSecond);
-        this.Body.position += distanceToMove;
+        this.MoveEntity(distanceToMove);
     }
 
     protected override void Rethink()

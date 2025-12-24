@@ -50,6 +50,9 @@ MonoBehaviour:
   projectileMask:
     serializedVersion: 2
     m_Bits: 64
+  environmentMask:
+    serializedVersion: 2
+    m_Bits: 256
   MyFaction: 2
   damageFlickerTime: 0.2
   damageFlickerColorOverTime:

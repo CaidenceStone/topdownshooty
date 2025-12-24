@@ -32,6 +32,11 @@ public class ConfirmPlayerWatcher : MonoBehaviour
 
     void OnStartPressed(InputAction.CallbackContext context)
     {
+        if (!MapGenerator.MapReady)
+        {
+            return;
+        }
+
         // If this device is arleady tracked, ignore this input
         if (recognizedDevicesToPlayer.ContainsKey(context.control.device))
         {

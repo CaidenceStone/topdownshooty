@@ -41,6 +41,16 @@ public class ConfirmPlayerWatcher : MonoBehaviour
         Debug.Log($"Spawning new player because of an input from the '{context.control.device.displayName}'.");
         TDSCharacterController newController = Instantiate(characterPF, this.transform);
         this.recognizedDevicesToPlayer.Add(context.control.device, newController);
-        newController.SetDevice(context.control.device);
+
+        List<InputDevice> devices = new List<InputDevice>();
+        devices.Add(context.control.device);
+
+        // If this device is the keyboard, also assign the mouse
+        if (context.control.device == Keyboard.current.device)
+        {
+            devices.Add(Mouse.current.device);
+        }
+
+        newController.SetDevices(devices.ToArray());
     }
 }

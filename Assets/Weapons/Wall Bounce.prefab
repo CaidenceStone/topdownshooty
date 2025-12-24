@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 3400921925597072924}
   - component: {fileID: 9037010792030729876}
   m_Layer: 7
-  m_Name: Enemy Basic Shooter
+  m_Name: Wall Bounce
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -44,14 +44,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 304115f41ab72c242a7abab3f07a8eee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WeaponName: Enemy Basic Shooter
-  timeBetweenShots: 0.8
-  projectilePF: {fileID: 8442961825726286169, guid: 2b080969317fd3a40b0adf7443426dbd, type: 3}
-  randomStartSleepTimeModifierMax: 0.5
-  minimumBullets: 1
-  maximumBullets: 1
-  minimumMovementSpeed: 14
-  maximumMovementSpeed: 16
+  WeaponName: Wall Bouncer
+  timeBetweenShots: 0.25
+  projectilePF: {fileID: 8442961825726286169, guid: ee2c6c516bdd289419791d72805ac04c, type: 3}
+  randomStartSleepTimeModifierMax: 0
+  minimumBullets: 12
+  maximumBullets: 20
+  minimumMovementSpeed: 3
+  maximumMovementSpeed: 12
   movementSpeedCurve:
     serializedVersion: 2
     m_Curve:
@@ -76,4 +76,4 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  maximumSpread: 0.3
+  maximumSpread: 0.6

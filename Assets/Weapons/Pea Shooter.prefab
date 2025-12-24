@@ -50,8 +50,8 @@ MonoBehaviour:
   randomStartSleepTimeModifierMax: 0
   minimumBullets: 1
   maximumBullets: 1
-  minimumMovementSpeed: 10
-  maximumMovementSpeed: 12
+  minimumMovementSpeed: 25
+  maximumMovementSpeed: 30
   movementSpeedCurve:
     serializedVersion: 2
     m_Curve:

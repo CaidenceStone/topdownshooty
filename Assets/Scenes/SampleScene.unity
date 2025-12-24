@@ -153,7 +153,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyPF: {fileID: 7209317087632798729, guid: 19f703beb174fed488e9ea066bfda54b, type: 3}
-  secondsBetweenEnemySpawns: 1
+  secondsBetweenEnemySpawns: 2
   distanceToSpawnEnemyAt: 10
 --- !u!4 &166806126
 Transform:

@@ -61,6 +61,11 @@ public class Enemy : Entity
         float? closestDistance = null;
         foreach (TDSCharacterController controller in ConfirmPlayerWatcher.GetCharacters())
         {
+            if (controller.ShouldDestroy)
+            {
+                continue;
+            }
+
             float distanceToPoint = Vector2.Distance(this.Body.position, controller.Body.position);
             if (!closestDistance.HasValue || distanceToPoint < closestDistance.Value)
             {

@@ -60,7 +60,7 @@ public class Projectile : MonoBehaviour
         this.curLifeTimeRemaining -= Time.deltaTime;
         if (this.curLifeTimeRemaining <= 0)
         {
-            Destroy();
+            SetShouldDestroy();
         }
 
         if (this.shouldDestroy)
@@ -100,7 +100,7 @@ public class Projectile : MonoBehaviour
                     }
 
                     // Cut movement speed by bounciness value
-                    this.movementSpeed = Mathf.Lerp(0, this.movementSpeed, this.bounciness);
+                    this.movementSpeed = Mathf.LerpUnclamped(0, this.movementSpeed, this.bounciness);
                     this.body.position += direction * Mathf.MoveTowards(hits[0].distance, 0, Entity.PLANCKCOLLISIONDISTANCE);
 
                     newDirection = hits[0].normal;
@@ -144,7 +144,7 @@ public class Projectile : MonoBehaviour
         }
     }
 
-    public void Destroy()
+    public void SetShouldDestroy()
     {
         this.shouldDestroy = true;
     }
@@ -153,7 +153,7 @@ public class Projectile : MonoBehaviour
     {
         if ((this.environmentMask & (1 << collision.gameObject.layer)) != 0)
         {
-            this.Destroy();
+            this.SetShouldDestroy();
             return;
         }
     }

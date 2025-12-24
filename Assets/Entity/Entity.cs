@@ -136,7 +136,7 @@ public class Entity : MonoBehaviour
 
         this.RegisterImpactEvent(new ImpactEvent(projectile.FiringAngle, projectile.ImpactTime, projectile.Impact, projectile.ImpactOverTime));
 
-        projectile.Destroy();
+        projectile.SetShouldDestroy();
     }
 
     public virtual void MarkForDestruction()

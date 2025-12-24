@@ -29,6 +29,7 @@ public class TDSCharacterController : Entity
     private bool useMousePosition { get; set; } = false;
     private Vector2 aimingDirection { get; set; }
     private Vector2 aimingCenter { get; set; }
+    private Vector2? currentMoveInput { get; set; }
 
     [SerializeField]
     private string deviceDisplayNameLabel;
@@ -78,6 +79,7 @@ public class TDSCharacterController : Entity
     {
         base.InputUpdates();
 
+        this.HandleMoveInput();
         this.HandleFacingAndAiming();
         this.HandleCycleWeapons();
     }
@@ -90,13 +92,24 @@ public class TDSCharacterController : Entity
         this.HandleFiring();
     }
 
-    void HandleFixedMovement()
+    void HandleMoveInput()
     {
-        if (this.playerControls.Gameplay.Move.IsPressed())
+        if (playerControls.Gameplay.Move.IsPressed())
         {
             Vector2 movement = this.playerControls.Gameplay.Move.ReadValue<Vector2>();
-            movement = Vector2.ClampMagnitude(movement, 1f);
-            Vector2 distanceMoving = movement * this.moveSpeedPerSecond * Time.deltaTime;
+            this.currentMoveInput = Vector2.ClampMagnitude(movement, 1f);
+        }
+        else
+        {
+            this.currentMoveInput = null;
+        }
+    }
+
+    void HandleFixedMovement()
+    {
+        if (currentMoveInput.HasValue)
+        {
+            Vector2 distanceMoving = Vector2.ClampMagnitude(this.currentMoveInput.Value, 1f) * this.moveSpeedPerSecond * Time.deltaTime;
             this.MoveEntity(distanceMoving);
         }
     }
@@ -115,16 +128,14 @@ public class TDSCharacterController : Entity
         }
         else
         {
-            if (!this.playerControls.Gameplay.Look.IsPressed())
+            if (this.playerControls.Gameplay.Look.IsPressed())
             {
-                return;
+                Vector2 lookDirection = this.playerControls.Gameplay.Look.ReadValue<Vector2>();
+                float angleToLook = Vector2.SignedAngle(lookDirection, Vector2.up);
+                this.rotationPoint.transform.rotation = Quaternion.Euler(0, 0, -angleToLook);
+                this.aimingDirection = lookDirection.normalized;
+                this.aimingCenter = this.Body.position + aimingDirection * this.aimingCenterMaximumOffset;
             }
-
-            Vector2 lookPosition = this.playerControls.Gameplay.Look.ReadValue<Vector2>();
-            float angleToLook = Vector2.SignedAngle(lookPosition, Vector2.up);
-            this.rotationPoint.transform.rotation = Quaternion.Euler(0, 0, -angleToLook);
-            this.aimingDirection = lookPosition.normalized;
-            this.aimingCenter = this.Body.position + lookPosition * this.aimingCenterMaximumOffset;
         }
     }
 

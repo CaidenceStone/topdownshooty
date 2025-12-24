@@ -31,13 +31,16 @@ public class TDSCharacterController : Entity
     private Vector2 aimingCenter { get; set; }
 
     [SerializeField]
-    private float timeBetweenShots = .5f;
-    private float curTimeBetweenShots { get; set; } = 0f;
-    [SerializeReference]
-    private Projectile projectilePF;
-
-    [SerializeField]
     private string deviceDisplayNameLabel;
+    [SerializeReference]
+    private Weapon ownWeapon;
+
+    protected override void Start()
+    {
+        base.Start();
+
+        this.ownWeapon.InitializeWeapon(this.MyFaction);
+    }
 
     public Vector2 VisualAimingCenter
     {
@@ -67,11 +70,7 @@ public class TDSCharacterController : Entity
     protected override void TickDownTimers()
     {
         base.TickDownTimers();
-
-        if (this.curTimeBetweenShots > 0)
-        {
-            this.curTimeBetweenShots -= Time.deltaTime;
-        }
+        this.ownWeapon.TickDownTimers();
     }
 
     protected override void BehaviourUpdate()
@@ -121,20 +120,10 @@ public class TDSCharacterController : Entity
 
     void HandleFiring()
     {
-        if (this.curTimeBetweenShots > 0)
+        if (this.playerControls.Gameplay.Fire.IsPressed())
         {
-            return;
+            this.ownWeapon.FireInDirection(this.aimingDirection);
         }
-
-        if (!this.playerControls.Gameplay.Fire.IsPressed())
-        {
-            return;
-        }
-
-        this.curTimeBetweenShots = this.timeBetweenShots;
-        Projectile newProjectile = Instantiate(this.projectilePF);
-        newProjectile.transform.position = this.firingPoint.position;
-        newProjectile.StartProjectile(this.aimingDirection, Faction.Player);
     }
 
     void MouseMovementDetected(InputAction.CallbackContext context)

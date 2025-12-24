@@ -102,6 +102,7 @@ MonoBehaviour:
   timeBetweenProjectiles: 1
   randomStartSleepTimeModifierMax: 5
   maximumSpread: 0.2
+  ownWeapon: {fileID: 5912329800697785132}
 --- !u!50 &317968690895209869
 Rigidbody2D:
   serializedVersion: 4
@@ -307,6 +308,52 @@ SpriteMask:
   m_BackSortingOrder: 0
   m_IsCustomRangeActive: 0
   m_SpriteSortPoint: 0
+--- !u!1 &4439076614555432123
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7332064740120551299}
+  - component: {fileID: 5912329800697785132}
+  m_Layer: 7
+  m_Name: Weapon
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7332064740120551299
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4439076614555432123}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 949184130567544330}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5912329800697785132
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4439076614555432123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 304115f41ab72c242a7abab3f07a8eee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  timeBetweenShots: 0.5
+  projectilePF: {fileID: 8442961825726286169, guid: 2b080969317fd3a40b0adf7443426dbd, type: 3}
 --- !u!1 &6297636651140623489
 GameObject:
   m_ObjectHideFlags: 0
@@ -435,6 +482,7 @@ Transform:
   - {fileID: 4236455955980356723}
   - {fileID: 6860173533093688260}
   - {fileID: 2901314839433225148}
+  - {fileID: 7332064740120551299}
   m_Father: {fileID: 5134499097567795553}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

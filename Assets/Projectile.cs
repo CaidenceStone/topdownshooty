@@ -31,16 +31,27 @@ public class Projectile : MonoBehaviour
     [SerializeField]
     private LayerMask environmentMask;
 
+    [SerializeField]
+    private float lifeTimeMax = 2f;
+    private float curLifeTimeRemaining { get; set; }
+
     public void StartProjectile(Vector2 startFiringAngle, Faction ofFaction)
     {
         this.FiringAngle = startFiringAngle;
         float angleToLook = Vector2.SignedAngle(startFiringAngle, Vector2.up);
         this.rotationPoint.transform.rotation = Quaternion.Euler(0, 0, -angleToLook);
         this.MyFaction = ofFaction;
+        this.curLifeTimeRemaining = this.lifeTimeMax;
     }
 
     private void FixedUpdate()
     {
+        this.curLifeTimeRemaining -= Time.deltaTime;
+        if (this.curLifeTimeRemaining <= 0)
+        {
+            Destroy();
+        }
+
         if (this.shouldDestroy)
         {
             Destroy(this.gameObject);

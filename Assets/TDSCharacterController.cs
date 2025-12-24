@@ -7,10 +7,10 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
-public class TDSCharacterController : MonoBehaviour
+public class TDSCharacterController : Entity
 {
     [SerializeReference]
-    private Rigidbody2D body;
+    public Rigidbody2D Body;
     [SerializeReference]
     private Transform rotationPoint;
     [SerializeReference]
@@ -69,7 +69,7 @@ public class TDSCharacterController : MonoBehaviour
             Vector2 movement = this.playerControls.Gameplay.Move.ReadValue<Vector2>();
             movement = Vector2.ClampMagnitude(movement, 1f);
             Vector2 distanceMoving = movement * this.moveSpeedPerSecond * Time.deltaTime;
-            this.body.position += distanceMoving;
+            this.Body.position += distanceMoving;
         }
     }
 
@@ -79,7 +79,7 @@ public class TDSCharacterController : MonoBehaviour
         {
             Vector2 mouseScreenPosition = this.playerControls.Gameplay.MousePosition.ReadValue<Vector2>();
             Vector2 cameraWorldPosition = Camera.main.ScreenToWorldPoint(mouseScreenPosition);
-            Vector2 positionDifference = cameraWorldPosition - this.body.position;
+            Vector2 positionDifference = cameraWorldPosition - this.Body.position;
             float angleToLook = Vector2.SignedAngle(positionDifference, Vector2.up);
             this.rotationPoint.transform.rotation = Quaternion.Euler(0, 0, -angleToLook);
             this.aimingDirection = positionDifference.normalized;
@@ -118,7 +118,7 @@ public class TDSCharacterController : MonoBehaviour
         this.curTimeBetweenShots = this.timeBetweenShots;
         Projectile newProjectile = Instantiate(this.projectilePF);
         newProjectile.transform.position = this.firingPoint.position;
-        newProjectile.StartProjectile(this.aimingDirection);
+        newProjectile.StartProjectile(this.aimingDirection, Faction.Player);
     }
 
     void MouseMovementDetected(InputAction.CallbackContext context)

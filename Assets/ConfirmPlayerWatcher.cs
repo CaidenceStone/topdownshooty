@@ -7,7 +7,7 @@ using UnityEngine.InputSystem;
 
 public class ConfirmPlayerWatcher : MonoBehaviour
 {
-    private Dictionary<InputDevice, TDSCharacterController> recognizedDevicesToPlayer { get; set; } = new Dictionary<InputDevice, TDSCharacterController>();
+    private static Dictionary<InputDevice, TDSCharacterController> recognizedDevicesToPlayer { get; set; } = new Dictionary<InputDevice, TDSCharacterController>();
     private @PlayerControls playerControls { get; set; }
 
     [SerializeReference]
@@ -33,14 +33,14 @@ public class ConfirmPlayerWatcher : MonoBehaviour
     void OnStartPressed(InputAction.CallbackContext context)
     {
         // If this device is arleady tracked, ignore this input
-        if (this.recognizedDevicesToPlayer.ContainsKey(context.control.device))
+        if (recognizedDevicesToPlayer.ContainsKey(context.control.device))
         {
             return;
         }
 
         Debug.Log($"Spawning new player because of an input from the '{context.control.device.displayName}'.");
         TDSCharacterController newController = Instantiate(characterPF, this.transform);
-        this.recognizedDevicesToPlayer.Add(context.control.device, newController);
+        recognizedDevicesToPlayer.Add(context.control.device, newController);
 
         List<InputDevice> devices = new List<InputDevice>();
         devices.Add(context.control.device);
@@ -52,5 +52,10 @@ public class ConfirmPlayerWatcher : MonoBehaviour
         }
 
         newController.SetDevices(devices.ToArray());
+    }
+
+    public static IEnumerable<TDSCharacterController> GetCharacters()
+    {
+        return recognizedDevicesToPlayer.Values;
     }
 }

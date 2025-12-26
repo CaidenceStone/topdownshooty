@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "MapGenerator", menuName = "Map Generation/Circular Map Generatoin Plan", order = 0)]
+[CreateAssetMenu(fileName = "MapGenerator", menuName = "Map Generation/Circular Map Generation Plan", order = 0)]
 public class CircularMapGenerationPlan : MapGenerationPlan
 {
     public int CircleRadius = 15;

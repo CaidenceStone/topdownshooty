@@ -17,6 +17,8 @@ public class ConfirmPlayerWatcher : MonoBehaviour
     private TDSCharacterController characterPF;
     [SerializeReference]
     private PlayerHUDManager hudManager;
+    [SerializeReference]
+    private TDSCamera gameCamera;
 
     private void Awake()
     {
@@ -53,6 +55,7 @@ public class ConfirmPlayerWatcher : MonoBehaviour
 
         Debug.Log($"Spawning new player because of an input from the '{context.control.device.displayName}'.");
         TDSCharacterController newController = Instantiate(characterPF, this.transform);
+        newController.Body.position = new Vector2((MapGenerator.MostRight + MapGenerator.MostLeft) / 2, (MapGenerator.MostTop + MapGenerator.MostBottom) / 2);
         recognizedDevicesToPlayer.Add(context.control.device, newController);
 
         List<InputDevice> devices = new List<InputDevice>();

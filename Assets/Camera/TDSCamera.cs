@@ -97,4 +97,8 @@ public class TDSCamera : MonoBehaviour
         totalPosition /= entitiesToFollow.Count;
         return totalPosition;
     }
+    public void SnapPosition(Vector2 position)
+    {
+        this.transform.position = position;
+    }
 }

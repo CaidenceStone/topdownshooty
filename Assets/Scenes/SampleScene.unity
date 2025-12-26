@@ -432,7 +432,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   MinimumZoomLevel: 8
-  MaximumZoomLevel: 20
+  MaximumZoomLevel: 24
   ZoomLevelChangeSpeedPerSecond: 5
   ZoomLevelLerpPerSecond: 0.1
   DistanceForMaximumZoom: 25
@@ -467,6 +467,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   plan: {fileID: 11400000, guid: 0652d44401c8b4c4fa4d621bc1751d23, type: 2}
+  gameCamera: {fileID: 519420033}
+  startPlayCircle: {fileID: 458104623}
 --- !u!4 &681371443
 Transform:
   m_ObjectHideFlags: 0
@@ -635,6 +637,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   characterPF: {fileID: 1501277515473088697, guid: 27501fc711dccc84aa4904e2700f4f62, type: 3}
   hudManager: {fileID: 715156914}
+  gameCamera: {fileID: 519420033}
 --- !u!4 &763687796
 Transform:
   m_ObjectHideFlags: 0

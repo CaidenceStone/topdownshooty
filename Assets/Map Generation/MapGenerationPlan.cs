@@ -15,7 +15,12 @@ public abstract class MapGenerationPlan : ScriptableObject
     {
         foreach (Vector2Int spawnPoint in spawnPoints)
         {
-            Instantiate(toSpawn, new Vector3(spawnPoint.x, spawnPoint.y), Quaternion.identity);
+            MapGenerator.MostBottom = Mathf.Min(MapGenerator.MostBottom, spawnPoint.y);
+            MapGenerator.MostLeft = Mathf.Min(MapGenerator.MostLeft, spawnPoint.x);
+            MapGenerator.MostTop = Mathf.Max(MapGenerator.MostTop, spawnPoint.y);
+            MapGenerator.MostRight = Mathf.Max(MapGenerator.MostRight, spawnPoint.x);
+
+            Instantiate(toSpawn, new Vector2(spawnPoint.x, spawnPoint.y), Quaternion.identity);
         }
     }
 }

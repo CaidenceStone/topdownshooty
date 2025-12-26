@@ -16,13 +16,13 @@ public class EnemySpawners : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (!ConfirmPlayerWatcher.GameActive)
+        if (!StaticLevelDirector.GameActive)
         {
             return;
         }
 
         // Wait for a character to spawn
-        if (!ConfirmPlayerWatcher.GetCharacters().Any())
+        if (!StaticLevelDirector.CurrentLevelDirector.AlivePlayers.Any())
         {
             return;
         }
@@ -36,7 +36,7 @@ public class EnemySpawners : MonoBehaviour
 
         this.curSecondsBetweenEnemySpawns = this.secondsBetweenEnemySpawns;
 
-        Vector2 positionToSpawn = Random.insideUnitCircle.normalized * this.distanceToSpawnEnemyAt;
+        Vector2 positionToSpawn = MapGenerator.GetRandomNegativeSpaceAwayFromPoints(StaticLevelDirector.CurrentLevelDirector.GetCharacterPositions(), distanceToSpawnEnemyAt, float.MaxValue);
         Enemy newEnemy = Instantiate(this.enemyPF, this.transform);
         newEnemy.transform.position = positionToSpawn;
     }

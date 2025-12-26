@@ -21,4 +21,12 @@ MonoBehaviour:
   ExtraWallBuffer: 10
   StampCount: 5
   CircleStampRadiusMin: 10
-  CircleStampRadiusMax: 20
+  CircleStampRadiusMax: 25
+  LineThicknessMin: 2
+  LineThicknessMax: 3
+  InnerStampMinCount: 1
+  InnerStampMaxCount: 10
+  CircleInnerStampRadiusMin: 2
+  CircleInnerStampRadiusMax: 5
+  MinDistanceBetweenStamps: 4
+  MaxDistanceBetweenStamps: 15

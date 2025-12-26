@@ -4,13 +4,13 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class StartPlayCircle : MonoBehaviour
+public class EventCircle : MonoBehaviour
 {
     public float TimeInCircleToProc = 2f;
     public float DistanceForCircle = 5f;
     private float curTimeInCircleToProc { get; set; } = 0;
 
-    public UnityEvent<StartPlayCircle> StartPlayProc;
+    public UnityEvent<EventCircle> StartPlayProc;
 
     public Color StartColor;
     public Color EndColor;
@@ -20,7 +20,7 @@ public class StartPlayCircle : MonoBehaviour
     {
         CircleRenderer.color = Color.Lerp(StartColor, EndColor, curTimeInCircleToProc / TimeInCircleToProc);
 
-        IEnumerable<TDSCharacterController> allCharacters = ConfirmPlayerWatcher.GetCharacters();
+        IEnumerable<TDSCharacterController> allCharacters = StaticLevelDirector.CurrentLevelDirector.AlivePlayers;
         int count = allCharacters.Count();
 
         if (count == 0)

@@ -46,7 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   WeaponName: Shooer
   timeBetweenShots: 0.05
-  projectilePF: {fileID: 8442961825726286169, guid: c7adb3621e9be854aa6131cdf97e7b18, type: 3}
+  projectilePF: {fileID: 8442961825726286169, guid: a2c1d64b4ed18284d83970addb6797df, type: 3}
   randomStartSleepTimeModifierMax: 0
   minimumBullets: 12
   maximumBullets: 20

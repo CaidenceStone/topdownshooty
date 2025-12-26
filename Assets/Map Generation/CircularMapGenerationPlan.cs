@@ -9,9 +9,10 @@ public class CircularMapGenerationPlan : MapGenerationPlan
     public int CircleRadius = 15;
     public int WallFillingBufferSize = 5;
 
-    public override async Task GenerateMapAsync()
+    public override async Task<List<Vector2Int>> GenerateMapAsync()
     {
         List<Vector2Int> spawnPoints = new List<Vector2Int>();
+        List<Vector2Int> emptySpace = new List<Vector2Int>();
 
         for (int xx = -this.CircleRadius - WallFillingBufferSize; xx < this.CircleRadius + WallFillingBufferSize; xx++)
         {
@@ -24,9 +25,14 @@ public class CircularMapGenerationPlan : MapGenerationPlan
                 {
                     spawnPoints.Add(thisPosition);
                 }
+                else
+                {
+                    emptySpace.Add(thisPosition);
+                }
             }
         }
 
         await this.SpawnPF(this.WallPF, spawnPoints);
+        return emptySpace;
     }
 }

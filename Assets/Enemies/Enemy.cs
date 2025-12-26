@@ -59,7 +59,7 @@ public class Enemy : Entity
         // TODO: This is a hacky quick way of determining closest player, do something more elegant
         TDSCharacterController closestCharacter = null;
         float? closestDistance = null;
-        foreach (TDSCharacterController controller in ConfirmPlayerWatcher.GetCharacters())
+        foreach (TDSCharacterController controller in StaticLevelDirector.CurrentLevelDirector.AlivePlayers)
         {
             if (controller.ShouldDestroy)
             {

@@ -19,6 +19,7 @@ public class TDSCharacterController : Entity
     private float aimingCenterMaximumOffset = 2f;
 
     private @PlayerControls playerControls { get; set; }
+    public PlayerIdentity ForIdentity { get; set; }
 
     /// <summary>
     /// True: Use MousePosition for determining where to aim.
@@ -178,7 +179,7 @@ public class TDSCharacterController : Entity
 
     protected override void HandleDestroy()
     {
-
+        this.ForIdentity.CurrentController = null;
     }
 
     private void OnEnable()

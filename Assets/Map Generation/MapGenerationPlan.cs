@@ -9,7 +9,7 @@ public abstract class MapGenerationPlan : ScriptableObject
 {
     public GameObject WallPF;
 
-    public abstract Task GenerateMapAsync();
+    public abstract Task<List<Vector2Int>> GenerateMapAsync();
 
     protected async Task SpawnPF(GameObject toSpawn, IEnumerable<Vector2Int> spawnPoints)
     {

@@ -61,6 +61,7 @@ public class Entity : MonoBehaviour
     {
         this.CurrentHP = this.MaximumHP;
         this.HealthChanged?.Invoke(this.CurrentHP, this.MaximumHP, this.MaximumHP);
+        StaticLevelDirector.CurrentLevelDirector.RegisterEntity(this);
     }
 
     protected virtual void Update()
@@ -220,6 +221,7 @@ public class Entity : MonoBehaviour
 
     protected virtual void HandleDestroy()
     {
+        StaticLevelDirector.CurrentLevelDirector.UnregisterEntity(this);
         Destroy(this.gameObject);
     }
 

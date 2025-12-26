@@ -9,20 +9,17 @@ using UnityEngine.SceneManagement;
 
 public class ConfirmPlayerWatcher : MonoBehaviour
 {
-    public static bool GameActive { get; private set; } = false;
-    private static Dictionary<InputDevice, TDSCharacterController> recognizedDevicesToPlayer { get; set; } = new Dictionary<InputDevice, TDSCharacterController>();
     private @PlayerControls playerControls { get; set; }
 
     [SerializeReference]
-    private TDSCharacterController characterPF;
-    [SerializeReference]
-    private PlayerHUDManager hudManager;
-    [SerializeReference]
     private TDSCamera gameCamera;
+    [SerializeReference]
+    private MapGenerator mapGenerator;
+    [SerializeReference]
+    private SingleLevelDirector singleLevelDirector;
 
     private void Awake()
     {
-        GameActive = false;
         // Create a general playerControls object that can hear all players
         this.playerControls = new PlayerControls();
         this.playerControls.Enable();
@@ -47,48 +44,31 @@ public class ConfirmPlayerWatcher : MonoBehaviour
             return;
         }
 
+        InputDevice[] devices = new InputDevice[] { context.control.device };
+
         // If this device is arleady tracked, ignore this input
-        if (recognizedDevicesToPlayer.ContainsKey(context.control.device))
+        if (StaticLevelDirector.InputDeviceIsAlreadyRegistered(devices, out PlayerIdentity currentIdentity))
         {
+            if (currentIdentity.CurrentController == null)
+            {
+                this.singleLevelDirector.SpawnPlayer(devices);
+            }
             return;
         }
 
         Debug.Log($"Spawning new player because of an input from the '{context.control.device.displayName}'.");
-        TDSCharacterController newController = Instantiate(characterPF, this.transform);
-        newController.Body.position = new Vector2((MapGenerator.MostRight + MapGenerator.MostLeft) / 2, (MapGenerator.MostTop + MapGenerator.MostBottom) / 2);
-        recognizedDevicesToPlayer.Add(context.control.device, newController);
 
-        List<InputDevice> devices = new List<InputDevice>();
-        devices.Add(context.control.device);
-
-        // If this device is the keyboard, also assign the mouse
-        if (context.control.device == Keyboard.current.device)
+        // If this devices is the keyboard, tie it to the mouse
+        if (context.control.device == Keyboard.current)
         {
-            devices.Add(Mouse.current.device);
+            devices = new InputDevice[] { devices[0], Mouse.current };
         }
 
-        newController.SetDevices(devices.ToArray());
-        this.hudManager.TryRegisterCanvas(newController, out _);
+        this.singleLevelDirector.SpawnPlayer(devices);
     }
 
     void OnResetPressed(InputAction.CallbackContext context)
     {
-        RestartGame();
-    }
-
-    public static IEnumerable<TDSCharacterController> GetCharacters()
-    {
-        return recognizedDevicesToPlayer.Values;
-    }
-
-    public static void RestartGame()
-    {
-        recognizedDevicesToPlayer.Clear();
-        SceneManager.LoadScene(0, LoadSceneMode.Single);
-    }
-
-    public void Begin(StartPlayCircle circle)
-    {
-        GameActive = true;
+        StaticLevelDirector.RestartEntireGame();
     }
 }

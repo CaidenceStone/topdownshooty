@@ -17,14 +17,23 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
     public int ExtraWallBuffer = 10;
 
     public int StampCount = 5;
-    public int CircleStampRadiusMin = 10;
-    public int CircleStampRadiusMax = 20;
+    public float CircleStampRadiusMin = 10;
+    public float CircleStampRadiusMax = 20;
 
     public int LineThicknessMin = 3;
     public int LineThicknessMax = 6;
 
-    public override async Task GenerateMapAsync()
+    public int InnerStampMinCount = 0;
+    public int InnerStampMaxCount = 3;
+    public float CircleInnerStampRadiusMin = 3;
+    public float CircleInnerStampRadiusMax = 5;
+
+    public float MinDistanceBetweenStamps = 4;
+    public float MaxDistanceBetweenStamps = 8;
+
+    public override async Task<List<Vector2Int>> GenerateMapAsync()
     {
+        List<Vector2Int> negativeSpace = new List<Vector2Int>();
         int chosenWidth = UnityEngine.Random.Range(this.MapWidthMin, this.MapWidthMax);
         int chosenHeight = UnityEngine.Random.Range(this.MapHeightMin, this.MapHeightMax);
 
@@ -52,81 +61,139 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
             }
         });
 
-        Vector2Int previousCenter = Vector2Int.zero;
+        List<Vector2Int> connectionPoints = new List<Vector2Int>();
+        Vector2Int? previousConnectionPoint = null;
         for (int stampIndex = 0; stampIndex < StampCount; stampIndex++)
         {
+            // Pick a shape and a center point, and generate a list of all coordinates affected by the stamp
+            // The first stamp is to get a maximum removal area
+
             Vector2Int center;
-            Vector2Int[] wallsToRemove = StampCircle(chosenWidth, chosenHeight, moldableWalls, out center);
+            float randomRadius = UnityEngine.Random.Range(CircleStampRadiusMin, CircleStampRadiusMax);
+            List<Vector2Int> wallsToRemove = new List<Vector2Int>(StampCircle(moldableWalls, out center, randomRadius, previousConnectionPoint, MinDistanceBetweenStamps, MaxDistanceBetweenStamps));
+            int originalWallsToRemoveSize = wallsToRemove.Count;
+            if (originalWallsToRemoveSize == 0)
+            {
+                continue;
+            }
+
+            // Then make a stamp inside these affected areas, reintroducing some parts
+            int randomInnerStamp = UnityEngine.Random.Range(InnerStampMinCount, InnerStampMaxCount);
+            Debug.Log($"Rolled {randomInnerStamp} random inner stamps");
+            for (int innerStampIndex = 0; innerStampIndex < randomInnerStamp; innerStampIndex++)
+            {
+                randomRadius = UnityEngine.Random.Range(CircleInnerStampRadiusMin, CircleInnerStampRadiusMax);
+                IReadOnlyList<Vector2Int> wallsToRetain = StampCircle(wallsToRemove, out _, randomRadius, null, 0, 0);
+
+                if (wallsToRetain.Count == wallsToRemove.Count)
+                {
+                    wallsToRemove.Clear();
+                    break;
+                }
+
+                Debug.Log($"Inner stamp iteration {innerStampIndex} is removing {wallsToRetain.Count} from the removal");
+
+                foreach (Vector2Int wallToRetain in wallsToRetain)
+                {
+                    wallsToRemove.Remove(wallToRetain);
+                    moldableWalls.Add(wallToRetain);
+                }
+            }
+
+            if (wallsToRemove.Count == 0)
+            {
+                continue;
+            }
+
+            Debug.Log($"Stamp is removing {wallsToRemove.Count} / {moldableWalls.Count}");
+
+            for (int ii = wallsToRemove.Count - 1; ii >= 0; ii--)
+            {
+                Vector2Int wallToRemove = wallsToRemove[ii];
+                walls.Remove(wallToRemove);
+                moldableWalls.Remove(wallToRemove);
+                negativeSpace.Add(wallToRemove);
+            }
+
+            if (wallsToRemove.Count == 0)
+            {
+                continue;
+            }
+
+            previousConnectionPoint = wallsToRemove[UnityEngine.Random.Range(0, wallsToRemove.Count)];
+            connectionPoints.Add(previousConnectionPoint.Value);
+        }
+
+        for (int ii = 1; ii < connectionPoints.Count; ii++)
+        {
+            IReadOnlyList<Vector2Int> wallsToRemove = this.DrawLineBetween(connectionPoints[ii - 1], connectionPoints[ii], moldableWalls);
             foreach (Vector2Int wallToRemove in wallsToRemove)
             {
                 walls.Remove(wallToRemove);
                 moldableWalls.Remove(wallToRemove);
+                negativeSpace.Add(wallToRemove);
             }
-
-            if (stampIndex > 0)
-            {
-                wallsToRemove = this.DrawLineBetween(chosenWidth, chosenHeight, center, previousCenter, moldableWalls);
-                foreach (Vector2Int wallToRemove in wallsToRemove)
-                {
-                    walls.Remove(wallToRemove);
-                    moldableWalls.Remove(wallToRemove);
-                }
-            }
-            previousCenter = center;
         }
 
         await this.SpawnPF(this.WallPF, walls);
+        return negativeSpace;
     }
 
-    protected virtual Vector2Int[] StampCircle(int chosenWidth, int chosenHeight, IReadOnlyList<Vector2Int> coordinates, out Vector2Int center)
+    protected virtual IReadOnlyList<Vector2Int> StampCircle(IReadOnlyList<Vector2Int> coordinates, out Vector2Int center, float radius, Vector2Int? previousLinkPosition, float minDistance, float maxDistance)
     {
-        Vector2Int[] removeWalls = new Vector2Int[chosenWidth * chosenHeight];
-        int randomX = UnityEngine.Random.Range(0, chosenWidth);
-        int randomY = UnityEngine.Random.Range(0, chosenHeight);
-        int randomRadius = UnityEngine.Random.Range(CircleStampRadiusMin, CircleStampRadiusMax);
-        center = new Vector2Int(randomX, randomY);
+        if (coordinates.Count == 0)
+        {
+            center = Vector2Int.zero;
+            return Array.Empty<Vector2Int>();
+        }
 
-        int usedIndex = 0;
+        List<Vector2Int> wallsToStamp = new List<Vector2Int>(coordinates.Count);
+
+        if (previousLinkPosition.HasValue)
+        {
+            center = MapGenerator.GetNegativeSpaceFromSubset(previousLinkPosition.Value, coordinates, minDistance, maxDistance);
+        }
+        else
+        {
+            center = coordinates[UnityEngine.Random.Range(0, coordinates.Count)];
+        }
 
         for (int ii = 0, coordinatesLength = coordinates.Count; ii < coordinatesLength; ii++)
         {
             Vector2Int currentCoordinate = coordinates[ii];
 
-            if (currentCoordinate.x < 0 || currentCoordinate.y < 0 || currentCoordinate.x >= chosenWidth || currentCoordinate.y >= chosenHeight)
+            if (Vector2Int.Distance(coordinates[ii], center) <= radius)
             {
-                continue;
-            }
-
-            if (Vector2Int.Distance(coordinates[ii], center) <= randomRadius)
-            {
-                removeWalls[usedIndex] = coordinates[ii];
-                usedIndex++;
+                wallsToStamp.Add(coordinates[ii]);
             }
         }
 
-        Array.Resize(ref removeWalls, usedIndex);
-        return removeWalls;
+        return wallsToStamp;
     }
 
-    protected virtual Vector2Int[] DrawLineBetween(int chosenWidth, int chosenHeight, Vector2Int pointA, Vector2Int pointB, IReadOnlyList<Vector2Int> coordinates)
+    protected virtual List<Vector2Int> DrawLineBetween(Vector2Int pointA, Vector2Int pointB, IReadOnlyList<Vector2Int> coordinates)
     {
-        Vector2Int[] removeWalls = new Vector2Int[chosenWidth * chosenHeight];
+        List<Vector2Int> removeWalls = new List<Vector2Int>();
         float lineThickness = UnityEngine.Random.Range(LineThicknessMin, LineThicknessMax);
 
         Vector2 lineDirection = ((Vector2)(pointB - pointA)).normalized;
-        int usedIndex = 0;
         for (int ii = 0, coordinateLength = coordinates.Count; ii < coordinateLength; ii++)
         {
             Vector2Int currentPosition = coordinates[ii];
             Vector2 differenceFromLine = currentPosition - pointA;
             float t = Vector2.Dot(differenceFromLine, lineDirection);
+
+            if (t < 0 || t > differenceFromLine.magnitude)
+            {
+                continue;
+            }
+
             Vector2 closestPointOnLine = pointA + lineDirection * t;
             float distance = Vector2.Distance(currentPosition, closestPointOnLine);
 
             if (distance < lineThickness)
             {
-                removeWalls[usedIndex] = currentPosition;
-                usedIndex++;
+                removeWalls.Add(currentPosition);
             }
         }
 

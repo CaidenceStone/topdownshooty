@@ -35,6 +35,15 @@ public class SingleLevelDirector : MonoBehaviour
     [SerializeField]
     private float minimumEnemySpawnStartDistance = 20;
 
+    [SerializeField]
+    private int minWeaponDropsToStart = 0;
+    [SerializeField]
+    private int maxWeaponDropsToStart = 5;
+    [SerializeField]
+    private float minWeaponDropStartDistance = 5f;
+    [SerializeReference]
+    private DropManager dropManager;
+
     public IReadOnlyList<TDSCharacterController> AlivePlayers
     {
         get
@@ -99,11 +108,14 @@ public class SingleLevelDirector : MonoBehaviour
         if (StaticLevelDirector.InputDeviceIsAlreadyRegistered(fromDevices, out PlayerIdentity existingIdentity))
         {
             existingIdentity.CurrentController = newController;
+            newController.OwnWeaponCollection.InitializeWeaponCollection(newController, existingIdentity.WeaponData);
         }
         else
         {
             PlayerIdentity newIdentity = new PlayerIdentity(fromDevices);
             StaticLevelDirector.RegisterInputPlayer(fromDevices, newController);
+            newController.OwnWeaponCollection.InitializeWeaponCollection(newController);
+            newIdentity.WeaponData = newController.OwnWeaponCollection.Data;
         }
 
         this.PlayerStartingPosition = MapGenerator.GetRandomNegativeSpaceNearPoint(this.PlayerStartingPosition, this.minimumDistanceFromStartCircle, this.maximumDistanceFromStartCircle);
@@ -116,8 +128,6 @@ public class SingleLevelDirector : MonoBehaviour
 
     public void Begin()
     {
-        StaticLevelDirector.BeginLevel();
-
         IReadOnlyList<Vector2> currentCharacterPositions = StaticLevelDirector.CurrentLevelDirector.GetCharacterPositions();
 
         for (int ii = 0; ii < this.EnemyCountToSpawn; ii++)
@@ -126,6 +136,16 @@ public class SingleLevelDirector : MonoBehaviour
             Enemy newEnemy = Instantiate(this.enemyPF, this.transform);
             newEnemy.transform.position = positionToSpawn;
         }
+
+        int weaponDropCount = Random.Range(this.minWeaponDropsToStart, this.maxWeaponDropsToStart);
+        Debug.Log($"Spawning {weaponDropCount} initial weapon drops");
+        for (int ii = 0; ii < weaponDropCount; ii++)
+        {
+            Vector2 positionToSpawn = MapGenerator.GetRandomNegativeSpaceAwayFromPoints(currentCharacterPositions, this.minimumDistanceFromStartCircle, float.MaxValue);
+            this.dropManager.DoDropWeapon(positionToSpawn);
+        }
+
+        StaticLevelDirector.BeginLevel();
     }
 
     public IReadOnlyList<Vector2> GetCharacterPositions()
@@ -138,11 +158,6 @@ public class SingleLevelDirector : MonoBehaviour
         }
 
         return positions;
-    }
-
-    public void AdvanceLevel()
-    {
-        StaticLevelDirector.AdvanceLevel();
     }
 
     public void RegisterEntity(Entity toRegister)

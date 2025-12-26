@@ -33,6 +33,16 @@ public class DropManager : MonoBehaviour
             return;
         }
 
+        this.DoDropWeapon(position);
+    }
+
+    public void DoDropWeapon(Vector2 position)
+    {
+        if (weapons.Count == 0)
+        {
+            return;
+        }
+
         Weapon pfToUse = this.weapons[Random.Range(0, this.weapons.Count)];
         Weapon newWeapon = Instantiate(pfToUse, position, Quaternion.Euler(0, 0, Random.Range(0, 360f)));
         newWeapon.SetIsInWorld(true);

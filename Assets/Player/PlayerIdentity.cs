@@ -7,6 +7,7 @@ public class PlayerIdentity
 {
     public InputDevice[] Devices { get; set; } = new InputDevice[0];
     public TDSCharacterController CurrentController { get; set; } = null;
+    public WeaponCollectionData WeaponData { get; set; } = new WeaponCollectionData();
 
     public PlayerIdentity(InputDevice[] devices)
     {

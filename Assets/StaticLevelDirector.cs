@@ -21,6 +21,11 @@ public static class StaticLevelDirector
 
     public static void AdvanceLevel()
     {
+        foreach (PlayerIdentity curIdentity in recognizedDevicesToPlayer.Values)
+        {
+            Debug.Log($"Player identity should save {curIdentity.WeaponData.WeaponPFs.Count} prefab weapons");
+        }
+
         LoadedLevel++;
         SceneManager.LoadScene(0, LoadSceneMode.Single);
     }
@@ -59,6 +64,7 @@ public static class StaticLevelDirector
             recognizedDevicesToPlayer.Add(curDevice, newIdentity);
         }
         newIdentity.CurrentController = character;
+        newIdentity.WeaponData = newIdentity.CurrentController.OwnWeaponCollection.Data;
     }
 
     public static bool InputDeviceIsAlreadyRegistered(InputDevice[] devices, out PlayerIdentity currentIdentity)
@@ -83,6 +89,6 @@ public static class StaticLevelDirector
 
     public static IReadOnlyCollection<PlayerIdentity> GetPlayerIdentities()
     {
-        return recognizedDevicesToPlayer.Values;
+        return new HashSet<PlayerIdentity>(recognizedDevicesToPlayer.Values);
     }
 }

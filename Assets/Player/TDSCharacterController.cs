@@ -36,12 +36,12 @@ public class TDSCharacterController : Entity
     private string deviceDisplayNameLabel;
     [SerializeReference]
     public WeaponCollection OwnWeaponCollection;
+    [SerializeField]
+    private LayerMask pickupLayerMask;
 
     protected override void Start()
     {
         base.Start();
-
-        this.OwnWeaponCollection.InitializeWeaponCollection(this);
     }
 
     public Vector2 VisualAimingCenter
@@ -190,5 +190,25 @@ public class TDSCharacterController : Entity
     private void OnDisable()
     {
         TDSCamera.UnregisterFollowing(this);
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if ((this.pickupLayerMask & (1 << collision.gameObject.layer)) != 0)
+        {
+            IPickup pickup = collision.gameObject.GetComponentInParent<IPickup>();
+
+            if (pickup != null)
+            {
+                this.HandlePickup(pickup);
+            }
+
+            return;
+        }
+    }
+
+    private void HandlePickup(IPickup pickup)
+    {
+        pickup.ApplyToCharacter(this);
     }
 }

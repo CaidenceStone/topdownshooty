@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Weapon : MonoBehaviour
+public class Weapon : MonoBehaviour, IPickup
 {
     [SerializeField]
     public string WeaponName;
@@ -102,6 +102,12 @@ public class Weapon : MonoBehaviour
         else
         {
             this.fieldRoot.SetActive(false);
+            this.transform.localPosition = Vector3.zero;
         }
+    }
+
+    public void ApplyToCharacter(TDSCharacterController toApplyTo)
+    {
+        toApplyTo.OwnWeaponCollection.AddWeapon(this);
     }
 }

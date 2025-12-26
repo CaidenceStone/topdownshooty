@@ -76,6 +76,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Skip Level",
+                    "type": "Button",
+                    "id": "455ff9da-b01a-4777-9944-083bcb842f02",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -301,6 +310,17 @@
                 },
                 {
                     "name": "",
+                    "id": "4085570c-679e-40a0-b4d0-3d2a584ab286",
+                    "path": "<Gamepad>/rightTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Fire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "b90d4ff5-50aa-4366-87a5-114735b5be68",
                     "path": "<Gamepad>/rightShoulder",
                     "interactions": "",
@@ -362,6 +382,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "Reset",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e6755a77-d70f-4d59-bb7e-b4dfcda42976",
+                    "path": "<Keyboard>/pageDown",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Skip Level",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

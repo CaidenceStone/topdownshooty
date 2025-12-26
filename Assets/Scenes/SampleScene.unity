@@ -128,58 +128,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 6035850488119068718, guid: c4fddc5091bbcbe4da1faf66ca16d424, type: 3}
   m_PrefabInstance: {fileID: 6035850488096168200}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &426744714
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 426744716}
-  - component: {fileID: 426744715}
-  m_Layer: 0
-  m_Name: Drop Manager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &426744715
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 426744714}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8bdaf2e20638cc04dacda8a593d1a97a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  weapons:
-  - {fileID: 9037010792030729876, guid: f3b97f39b83aadd459a1823d58ace424, type: 3}
-  - {fileID: 9037010792030729876, guid: 9c472f844c57a08449fd4753bcfd0e33, type: 3}
-  - {fileID: 9037010792030729876, guid: acba6bd00652d3847b181dd53af581c4, type: 3}
-  - {fileID: 9037010792030729876, guid: 68ed9b55caa6ea84184093c7caa1ff8f, type: 3}
-  - {fileID: 9037010792030729876, guid: 172dd65378f89aa46af2619a795d52ba, type: 3}
-  dropChance: 0.1
-  singleLevelDirector: {fileID: 1629111029}
---- !u!4 &426744716
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 426744714}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 7
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &458104623 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5535398657122306157, guid: 1c43c9dcffdd0d848a97da1c9ad8bd47, type: 3}
@@ -1292,10 +1240,6 @@ PrefabInstance:
       propertyPath: gameCamera
       value: 
       objectReference: {fileID: 519420033}
-    - target: {fileID: 3725005177234677437, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
-      propertyPath: StartPlayCircle
-      value: 
-      objectReference: {fileID: 458104623}
     - target: {fileID: 3725005178417904505, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
       propertyPath: m_RootOrder
       value: 6
@@ -1341,17 +1285,9 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3725005178417904506, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
-      propertyPath: enemyPF
-      value: 
-      objectReference: {fileID: 7209317087632798729, guid: 19f703beb174fed488e9ea066bfda54b, type: 3}
-    - target: {fileID: 3725005178417904506, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
       propertyPath: hudManager
       value: 
       objectReference: {fileID: 715156914}
-    - target: {fileID: 3725005178417904506, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
-      propertyPath: characterPF
-      value: 
-      objectReference: {fileID: 1501277515473088697, guid: 27501fc711dccc84aa4904e2700f4f62, type: 3}
     - target: {fileID: 3725005178417904506, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
       propertyPath: gameplayCamera
       value: 
@@ -1361,13 +1297,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 458104623}
     - target: {fileID: 3725005178417904506, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
-      propertyPath: EnemyCountToSpawn
-      value: 20
-      objectReference: {fileID: 0}
-    - target: {fileID: 3725005178417904506, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
       propertyPath: nextLevelEventCircle
       value: 
       objectReference: {fileID: 1117270869}
+    - target: {fileID: 3725005178417904506, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
+      propertyPath: maxWeaponDropsToStart
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 3725005178417904506, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
+      propertyPath: minWeaponDropsToStart
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 3725005178417904507, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
       propertyPath: m_Name
       value: Single Level Director

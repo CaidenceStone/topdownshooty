@@ -29,12 +29,14 @@ public class ConfirmPlayerWatcher : MonoBehaviour
     {
         this.playerControls.Gameplay.Start.performed += OnStartPressed;
         this.playerControls.Gameplay.Reset.performed += OnResetPressed;
+        this.playerControls.Gameplay.SkipLevel.performed += OnSkipPressed;
     }
 
     private void OnDisable()
     {
         this.playerControls.Gameplay.Start.performed -= OnStartPressed;
         this.playerControls.Gameplay.Reset.performed -= OnResetPressed;
+        this.playerControls.Gameplay.SkipLevel.performed -= OnSkipPressed;
     }
 
     void OnStartPressed(InputAction.CallbackContext context)
@@ -70,5 +72,15 @@ public class ConfirmPlayerWatcher : MonoBehaviour
     void OnResetPressed(InputAction.CallbackContext context)
     {
         StaticLevelDirector.RestartEntireGame();
+    }
+
+    void OnSkipPressed(InputAction.CallbackContext context)
+    {
+        if (!context.action.WasPressedThisFrame())
+        {
+            return;
+        }
+
+        StaticLevelDirector.AdvanceLevel();
     }
 }

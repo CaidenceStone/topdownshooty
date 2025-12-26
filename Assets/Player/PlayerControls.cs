@@ -98,6 +98,15 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Skip Level"",
+                    ""type"": ""Button"",
+                    ""id"": ""455ff9da-b01a-4777-9944-083bcb842f02"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -323,6 +332,17 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""4085570c-679e-40a0-b4d0-3d2a584ab286"",
+                    ""path"": ""<Gamepad>/rightTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Fire"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""b90d4ff5-50aa-4366-87a5-114735b5be68"",
                     ""path"": ""<Gamepad>/rightShoulder"",
                     ""interactions"": """",
@@ -386,6 +406,17 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""action"": ""Reset"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e6755a77-d70f-4d59-bb7e-b4dfcda42976"",
+                    ""path"": ""<Keyboard>/pageDown"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Skip Level"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -419,6 +450,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         m_Gameplay_CycleWeaponRight = m_Gameplay.FindAction("Cycle Weapon Right", throwIfNotFound: true);
         m_Gameplay_CycleWeaponLeft = m_Gameplay.FindAction("Cycle Weapon Left", throwIfNotFound: true);
         m_Gameplay_Reset = m_Gameplay.FindAction("Reset", throwIfNotFound: true);
+        m_Gameplay_SkipLevel = m_Gameplay.FindAction("Skip Level", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -488,6 +520,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Gameplay_CycleWeaponRight;
     private readonly InputAction m_Gameplay_CycleWeaponLeft;
     private readonly InputAction m_Gameplay_Reset;
+    private readonly InputAction m_Gameplay_SkipLevel;
     public struct GameplayActions
     {
         private @PlayerControls m_Wrapper;
@@ -500,6 +533,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         public InputAction @CycleWeaponRight => m_Wrapper.m_Gameplay_CycleWeaponRight;
         public InputAction @CycleWeaponLeft => m_Wrapper.m_Gameplay_CycleWeaponLeft;
         public InputAction @Reset => m_Wrapper.m_Gameplay_Reset;
+        public InputAction @SkipLevel => m_Wrapper.m_Gameplay_SkipLevel;
         public InputActionMap Get() { return m_Wrapper.m_Gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -533,6 +567,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @Reset.started += instance.OnReset;
             @Reset.performed += instance.OnReset;
             @Reset.canceled += instance.OnReset;
+            @SkipLevel.started += instance.OnSkipLevel;
+            @SkipLevel.performed += instance.OnSkipLevel;
+            @SkipLevel.canceled += instance.OnSkipLevel;
         }
 
         private void UnregisterCallbacks(IGameplayActions instance)
@@ -561,6 +598,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @Reset.started -= instance.OnReset;
             @Reset.performed -= instance.OnReset;
             @Reset.canceled -= instance.OnReset;
+            @SkipLevel.started -= instance.OnSkipLevel;
+            @SkipLevel.performed -= instance.OnSkipLevel;
+            @SkipLevel.canceled -= instance.OnSkipLevel;
         }
 
         public void RemoveCallbacks(IGameplayActions instance)
@@ -597,5 +637,6 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         void OnCycleWeaponRight(InputAction.CallbackContext context);
         void OnCycleWeaponLeft(InputAction.CallbackContext context);
         void OnReset(InputAction.CallbackContext context);
+        void OnSkipLevel(InputAction.CallbackContext context);
     }
 }

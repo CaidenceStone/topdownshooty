@@ -1,12 +1,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Authentication.ExtendedProtection;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class ConfirmPlayerWatcher : MonoBehaviour
 {
+    public static bool GameActive { get; private set; } = false;
     private static Dictionary<InputDevice, TDSCharacterController> recognizedDevicesToPlayer { get; set; } = new Dictionary<InputDevice, TDSCharacterController>();
     private @PlayerControls playerControls { get; set; }
 
@@ -17,6 +20,7 @@ public class ConfirmPlayerWatcher : MonoBehaviour
 
     private void Awake()
     {
+        GameActive = false;
         // Create a general playerControls object that can hear all players
         this.playerControls = new PlayerControls();
         this.playerControls.Enable();
@@ -25,11 +29,13 @@ public class ConfirmPlayerWatcher : MonoBehaviour
     private void OnEnable()
     {
         this.playerControls.Gameplay.Start.performed += OnStartPressed;
+        this.playerControls.Gameplay.Reset.performed += OnResetPressed;
     }
 
     private void OnDisable()
     {
-        this.playerControls.Gameplay.Start.performed += OnStartPressed;
+        this.playerControls.Gameplay.Start.performed -= OnStartPressed;
+        this.playerControls.Gameplay.Reset.performed -= OnResetPressed;
     }
 
     void OnStartPressed(InputAction.CallbackContext context)
@@ -62,8 +68,24 @@ public class ConfirmPlayerWatcher : MonoBehaviour
         this.hudManager.TryRegisterCanvas(newController, out _);
     }
 
+    void OnResetPressed(InputAction.CallbackContext context)
+    {
+        RestartGame();
+    }
+
     public static IEnumerable<TDSCharacterController> GetCharacters()
     {
         return recognizedDevicesToPlayer.Values;
+    }
+
+    public static void RestartGame()
+    {
+        recognizedDevicesToPlayer.Clear();
+        SceneManager.LoadScene(0, LoadSceneMode.Single);
+    }
+
+    public void Begin(StartPlayCircle circle)
+    {
+        GameActive = true;
     }
 }

@@ -89,6 +89,15 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Reset"",
+                    ""type"": ""Button"",
+                    ""id"": ""c2bfc36b-fdfb-40c2-9538-4e658b32e96e"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -355,6 +364,28 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""action"": ""Cycle Weapon Left"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""803e6fce-0241-45a4-8ee4-179e93489520"",
+                    ""path"": ""<Keyboard>/home"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Reset"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""11b67de8-a514-4805-8737-493c00d3a2c9"",
+                    ""path"": ""<Gamepad>/select"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Reset"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -387,6 +418,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         m_Gameplay_Fire = m_Gameplay.FindAction("Fire", throwIfNotFound: true);
         m_Gameplay_CycleWeaponRight = m_Gameplay.FindAction("Cycle Weapon Right", throwIfNotFound: true);
         m_Gameplay_CycleWeaponLeft = m_Gameplay.FindAction("Cycle Weapon Left", throwIfNotFound: true);
+        m_Gameplay_Reset = m_Gameplay.FindAction("Reset", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -455,6 +487,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Gameplay_Fire;
     private readonly InputAction m_Gameplay_CycleWeaponRight;
     private readonly InputAction m_Gameplay_CycleWeaponLeft;
+    private readonly InputAction m_Gameplay_Reset;
     public struct GameplayActions
     {
         private @PlayerControls m_Wrapper;
@@ -466,6 +499,7 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         public InputAction @Fire => m_Wrapper.m_Gameplay_Fire;
         public InputAction @CycleWeaponRight => m_Wrapper.m_Gameplay_CycleWeaponRight;
         public InputAction @CycleWeaponLeft => m_Wrapper.m_Gameplay_CycleWeaponLeft;
+        public InputAction @Reset => m_Wrapper.m_Gameplay_Reset;
         public InputActionMap Get() { return m_Wrapper.m_Gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -496,6 +530,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @CycleWeaponLeft.started += instance.OnCycleWeaponLeft;
             @CycleWeaponLeft.performed += instance.OnCycleWeaponLeft;
             @CycleWeaponLeft.canceled += instance.OnCycleWeaponLeft;
+            @Reset.started += instance.OnReset;
+            @Reset.performed += instance.OnReset;
+            @Reset.canceled += instance.OnReset;
         }
 
         private void UnregisterCallbacks(IGameplayActions instance)
@@ -521,6 +558,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @CycleWeaponLeft.started -= instance.OnCycleWeaponLeft;
             @CycleWeaponLeft.performed -= instance.OnCycleWeaponLeft;
             @CycleWeaponLeft.canceled -= instance.OnCycleWeaponLeft;
+            @Reset.started -= instance.OnReset;
+            @Reset.performed -= instance.OnReset;
+            @Reset.canceled -= instance.OnReset;
         }
 
         public void RemoveCallbacks(IGameplayActions instance)
@@ -556,5 +596,6 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         void OnFire(InputAction.CallbackContext context);
         void OnCycleWeaponRight(InputAction.CallbackContext context);
         void OnCycleWeaponLeft(InputAction.CallbackContext context);
+        void OnReset(InputAction.CallbackContext context);
     }
 }

@@ -5,6 +5,8 @@ using UnityEngine;
 public class TDSCamera : MonoBehaviour
 {
     [SerializeField]
+    private Camera MyCamera;
+    [SerializeField]
     private float zDistanceBack = -10f;
     private static List<TDSCharacterController> entitiesToFollow { get; set; } = new List<TDSCharacterController>();
     [SerializeField]
@@ -16,6 +18,20 @@ public class TDSCamera : MonoBehaviour
     [SerializeField]
     private AnimationCurve followSpeedAtDistance;
 
+    [SerializeField]
+    public float MinimumZoomLevel = 8;
+    [SerializeField]
+    public float MaximumZoomLevel = 24;
+    private float curZoomLevel { get; set; } = 0;
+    [SerializeField]
+    public float ZoomLevelChangeSpeedPerSecond = 5f;
+    [SerializeField]
+    public float ZoomLevelLerpPerSecond = .1f;
+    [SerializeField]
+    public float DistanceForMaximumZoom = 15f;
+    [SerializeField]
+    public float DistanceForMinimumZoom = 5f;
+
     public static void RegisterFollowing(TDSCharacterController toFollow)
     {
         entitiesToFollow.Add(toFollow);
@@ -26,12 +42,40 @@ public class TDSCamera : MonoBehaviour
         entitiesToFollow.Remove(toUnregister);
     }
 
+    private void Awake()
+    {
+        this.curZoomLevel = this.MaximumZoomLevel;
+    }
+
     private void FixedUpdate()
     {
         if (entitiesToFollow.Count == 0)
         {
             return;
         }
+
+        float highestDistanceBetweenActors = 0;
+        
+        if (entitiesToFollow.Count > 1)
+        {
+            for (int ii = 0; ii < entitiesToFollow.Count; ii++)
+            {
+                for (int otherIndex = 0; otherIndex < ii; otherIndex++)
+                {
+                    if (ii == otherIndex)
+                    {
+                        continue;
+                    }
+
+                    float currentDistance = Vector2.Distance(entitiesToFollow[ii].Body.position, entitiesToFollow[otherIndex].Body.position);
+                    highestDistanceBetweenActors = Mathf.Max(highestDistanceBetweenActors, currentDistance);
+                }
+            }
+        }
+
+        float newTargetZoom = Mathf.Lerp(MinimumZoomLevel, MaximumZoomLevel, Mathf.InverseLerp(this.DistanceForMinimumZoom, DistanceForMaximumZoom, highestDistanceBetweenActors));
+        curZoomLevel = Mathf.MoveTowards(curZoomLevel, newTargetZoom, ZoomLevelChangeSpeedPerSecond * Time.deltaTime);
+        MyCamera.orthographicSize = curZoomLevel;
 
         Vector2 followPoint = this.GetCenterPointOfAllEntitiesToFollow();
         float distancePercentage = Vector2.Distance(transform.position, followPoint) / this.distanceForMaximumSpeed;

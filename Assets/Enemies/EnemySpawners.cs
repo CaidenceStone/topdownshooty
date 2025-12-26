@@ -16,6 +16,11 @@ public class EnemySpawners : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (!ConfirmPlayerWatcher.GameActive)
+        {
+            return;
+        }
+
         // Wait for a character to spawn
         if (!ConfirmPlayerWatcher.GetCharacters().Any())
         {

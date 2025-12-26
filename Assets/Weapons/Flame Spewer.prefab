@@ -44,7 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 304115f41ab72c242a7abab3f07a8eee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WeaponName: Wall Bouncer
+  WeaponName: Flame Spewer
   timeBetweenShots: 0.05
   projectilePF: {fileID: 8442961825726286169, guid: c7adb3621e9be854aa6131cdf97e7b18, type: 3}
   randomStartSleepTimeModifierMax: 0

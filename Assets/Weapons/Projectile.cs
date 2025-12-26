@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class Projectile : MonoBehaviour
 {
+    const float MAXIMUMPROJECTILEVELOCITY = 100f;
+
     [SerializeReference]
     private Rigidbody2D body;
     [SerializeReference]
@@ -52,7 +54,7 @@ public class Projectile : MonoBehaviour
         this.rotationPoint.transform.rotation = Quaternion.Euler(0, 0, -angleToLook);
         this.MyFaction = ofFaction;
         this.curLifeTimeRemaining = this.lifeTimeMax;
-        this.movementSpeed = speed;
+        this.UpdateMovementSpeed(speed);
     }
 
     private void FixedUpdate()
@@ -70,23 +72,25 @@ public class Projectile : MonoBehaviour
         }
 
         this.Slide(this.FiringAngle.normalized, this.movementSpeed * Time.deltaTime);
-        this.movementSpeed = Mathf.Lerp(this.movementSpeed, 0, this.speedLossOverLifetime.Evaluate(this.curLifeTimeRemaining / this.lifeTimeMax));
+        this.UpdateMovementSpeed(Mathf.Lerp(this.movementSpeed, 0, this.speedLossOverLifetime.Evaluate(this.curLifeTimeRemaining / this.lifeTimeMax)));
     }
 
     private void Slide(Vector2 direction, float distance)
     {
+        Collider2D previousIgnoredCollider = null;
+        RaycastHit2D[] hits = new RaycastHit2D[1];
         bool SlideIteration(Vector2 innerDirection, float innerDistance, out Vector2 newDirection, out float remainingDistance)
         {
-            RaycastHit2D[] hits = new RaycastHit2D[1];
-
-            if (this.body.Cast(direction, new ContactFilter2D() { layerMask = this.environmentMask, useLayerMask = true }, hits, distance) > 0)
+            if (this.body.Cast(innerDirection, new ContactFilter2D() { layerMask = this.environmentMask, useLayerMask = true }, hits, innerDistance) > 0)
             {
                 if (this.bounciness <= 0)
                 {
                     // If this has no bounciness, then just show up at the wall. We'll collide with it and end
+                    this.FiringAngle = innerDirection;
                     this.body.position = hits[0].point;
                     newDirection = innerDirection;
                     remainingDistance = 0;
+
                     return false;
                 }
                 else
@@ -94,20 +98,30 @@ public class Projectile : MonoBehaviour
                     // Ignore this collider for future checks, especially so that this bullet doesn't cease to exist immediately
                     Collider2D[] myColliders = new Collider2D[this.body.attachedColliderCount];
                     int foundColliders = this.body.GetAttachedColliders(myColliders);
+
+                    if (!ReferenceEquals(previousIgnoredCollider, null))
+                    {
+                        foreach (Collider2D curCollider in myColliders)
+                        {
+                            Physics2D.IgnoreCollision(curCollider, previousIgnoredCollider, false);
+                        }
+                    }
+
+                    previousIgnoredCollider = hits[0].collider;
                     foreach (Collider2D curCollider in myColliders)
                     {
                         Physics2D.IgnoreCollision(curCollider, hits[0].collider, true);
                     }
 
                     // Cut movement speed by bounciness value
-                    this.movementSpeed = Mathf.LerpUnclamped(0, this.movementSpeed, this.bounciness);
-                    this.body.position += direction * Mathf.MoveTowards(hits[0].distance, 0, Entity.PLANCKCOLLISIONDISTANCE);
+                    this.UpdateMovementSpeed(Mathf.LerpUnclamped(0, this.movementSpeed, this.bounciness));
 
-                    newDirection = hits[0].normal;
-                    remainingDistance = Mathf.MoveTowards(distance, 0, hits[0].distance);
                     this.FiringAngle = hits[0].normal;
+                    this.body.position += innerDirection * Mathf.MoveTowards(hits[0].distance, 0, Entity.PLANCKCOLLISIONDISTANCE);
+                    newDirection = this.FiringAngle;
+                    remainingDistance = Mathf.MoveTowards(innerDistance, 0, hits[0].distance - Entity.PLANCKCOLLISIONDISTANCE);
 
-                    float angleToLook = Vector2.SignedAngle(direction, Vector2.up);
+                    float angleToLook = Vector2.SignedAngle(newDirection, Vector2.up);
                     this.rotationPoint.transform.rotation = Quaternion.Euler(0, 0, -angleToLook);
 
                     return true;
@@ -115,11 +129,20 @@ public class Projectile : MonoBehaviour
             }
             else
             {
-                this.body.position += FiringAngle * movementSpeed * Time.deltaTime;
+                if (this.body.position.magnitude > 1000)
+                {
+                    Debug.LogError($"?????");
+                    remainingDistance = 0;
+                    newDirection = innerDirection;
+                    return false;
+                }
+
+                this.FiringAngle = innerDirection;
+                this.body.position += FiringAngle * innerDistance;
                 newDirection = innerDirection;
                 remainingDistance = innerDistance;
 
-                float angleToLook = Vector2.SignedAngle(direction, Vector2.up);
+                float angleToLook = Vector2.SignedAngle(newDirection, Vector2.up);
                 this.rotationPoint.transform.rotation = Quaternion.Euler(0, 0, -angleToLook);
 
                 return false;
@@ -156,5 +179,10 @@ public class Projectile : MonoBehaviour
             this.SetShouldDestroy();
             return;
         }
+    }
+
+    public void UpdateMovementSpeed(float newSpeed)
+    {
+        this.movementSpeed = Mathf.Clamp(newSpeed, 0, MAXIMUMPROJECTILEVELOCITY);
     }
 }

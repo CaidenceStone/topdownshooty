@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: GeometricStampMapGenerationPlan
   m_EditorClassIdentifier: 
   WallPF: {fileID: 6736155336947055435, guid: f2ef392171ac06243b92cea6680d0c81, type: 3}
-  CircleRadius: 15
   WallFillingBufferSize: 5
   MapWidthMin: 50
   MapWidthMax: 100
   MapHeightMin: 50
   MapHeightMax: 100
   ExtraWallBuffer: 10
+  StampCount: 5
+  CircleStampRadiusMin: 10
+  CircleStampRadiusMax: 20

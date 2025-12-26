@@ -466,7 +466,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d19a26324396b9a43b1f2e14d884a8ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  plan: {fileID: 11400000, guid: 0652d44401c8b4c4fa4d621bc1751d23, type: 2}
+  plan: {fileID: 11400000, guid: f33c6ca96c8ccee4a8e64c46f1685e76, type: 2}
   gameCamera: {fileID: 519420033}
   startPlayCircle: {fileID: 458104623}
 --- !u!4 &681371443

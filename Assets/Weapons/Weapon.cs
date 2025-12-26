@@ -37,6 +37,10 @@ public class Weapon : MonoBehaviour
     [SerializeField]
     private float maximumSpread = 1f;
 
+    [SerializeReference]
+    private GameObject fieldRoot;
+    public bool IsInWorld { get; private set; }
+
     private void Start()
     {
         this.curTimeBetweenShots = Random.Range(this.timeBetweenShots, this.timeBetweenShots + this.randomStartSleepTimeModifierMax);
@@ -85,5 +89,19 @@ public class Weapon : MonoBehaviour
     public void AddCooldown(float time)
     {
         this.curTimeBetweenShots += time;
+    }
+
+    public void SetIsInWorld(bool toValue)
+    {
+        this.IsInWorld = toValue;
+
+        if (this.IsInWorld)
+        {
+            this.fieldRoot.SetActive(true);
+        }
+        else
+        {
+            this.fieldRoot.SetActive(false);
+        }
     }
 }

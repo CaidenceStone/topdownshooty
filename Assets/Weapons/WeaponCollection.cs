@@ -21,6 +21,7 @@ public class WeaponCollection : MonoBehaviour
         foreach (Weapon curWeapon in this.Weapons)
         {
             curWeapon.InitializeWeapon(this.entity.MyFaction);
+            curWeapon.SetIsInWorld(false);
         }
     }
 

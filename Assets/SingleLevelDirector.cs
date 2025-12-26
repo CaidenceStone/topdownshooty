@@ -57,6 +57,8 @@ public class SingleLevelDirector : MonoBehaviour
 
     public delegate void CountUpdatedDelegate(int newCount);
     public event CountUpdatedDelegate OnEnemyCountUpdated;
+    public delegate void EntityEventDelegate(Entity forEntity);
+    public event EntityEventDelegate OnEnemyDefeated;
 
     private void Awake()
     {
@@ -162,6 +164,7 @@ public class SingleLevelDirector : MonoBehaviour
         int newCount = this.aliveOtherEntities.Count;
 
         this.OnEnemyCountUpdated?.Invoke(newCount);
+        this.OnEnemyDefeated?.Invoke(toUnregister);
 
         if (newCount == 0)
         {

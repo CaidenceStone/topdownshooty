@@ -51,6 +51,7 @@ public class TDSCamera : MonoBehaviour
     {
         if (entitiesToFollow.Count == 0)
         {
+            MyCamera.orthographicSize = this.MaximumZoomLevel;
             return;
         }
 

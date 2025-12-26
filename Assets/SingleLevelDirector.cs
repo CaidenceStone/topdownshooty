@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Net;
 using System.Threading.Tasks;
 using Unity.VisualScripting;
@@ -53,6 +54,9 @@ public class SingleLevelDirector : MonoBehaviour
 
     [SerializeField]
     private int EnemyCountToSpawn = 30;
+
+    public delegate void CountUpdatedDelegate(int newCount);
+    public event CountUpdatedDelegate OnEnemyCountUpdated;
 
     private void Awake()
     {
@@ -147,13 +151,19 @@ public class SingleLevelDirector : MonoBehaviour
         }
 
         this.aliveOtherEntities.Add(toRegister);
+        int newCount = this.aliveOtherEntities.Count;
+        this.OnEnemyCountUpdated?.Invoke(newCount);
     }
 
     public void UnregisterEntity(Entity toUnregister)
     {
         this.aliveOtherEntities.Remove(toUnregister);
 
-        if (this.aliveOtherEntities.Count == 0)
+        int newCount = this.aliveOtherEntities.Count;
+
+        this.OnEnemyCountUpdated?.Invoke(newCount);
+
+        if (newCount == 0)
         {
             Debug.Log($"Zero entities remaining, consider presenting next level");
             this.PresentNextLevel();

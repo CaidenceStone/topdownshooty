@@ -99,6 +99,9 @@ MonoBehaviour:
   minDesiredDistanceFromPlayer: 3
   maxDesiredDistanceFromPlayer: 7
   ownWeapon: {fileID: 5912329800697785132}
+  minimumDistanceToFire: 2
+  maximumDistanceToFire: 20
+  waitTimeAfterDistanceCheck: 0.25
 --- !u!50 &317968690895209869
 Rigidbody2D:
   serializedVersion: 4
@@ -348,39 +351,40 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 304115f41ab72c242a7abab3f07a8eee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WeaponName: 
-  timeBetweenShots: 0.5
+  WeaponName: Enemy Pea Shooter
+  timeBetweenShots: 1.2
+  maximumAdditionalRandomTimeBetweenShots: 3
   projectilePF: {fileID: 8442961825726286169, guid: 2b080969317fd3a40b0adf7443426dbd, type: 3}
-  randomStartSleepTimeModifierMax: 0
+  randomStartSleepTimeModifierMax: 0.5
   minimumBullets: 1
   maximumBullets: 1
-  minimumMovementSpeed: 10
-  maximumMovementSpeed: 12
+  minimumMovementSpeed: 6.5
+  maximumMovementSpeed: 9
   movementSpeedCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
       value: 0
-      inSlope: 0.05
-      outSlope: 0.05
+      inSlope: 1
+      outSlope: 1
       tangentMode: 34
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.33333334
+      outWeight: 0
     - serializedVersion: 3
       time: 1
-      value: 0.05
-      inSlope: 0.05
-      outSlope: 0.05
+      value: 1
+      inSlope: 1
+      outSlope: 1
       tangentMode: 34
       weightedMode: 0
-      inWeight: 0.33333334
+      inWeight: 0
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  maximumSpread: 1
+  maximumSpread: 0.3
 --- !u!1 &6297636651140623489
 GameObject:
   m_ObjectHideFlags: 0

@@ -51,7 +51,7 @@ public class ConfirmPlayerWatcher : MonoBehaviour
         {
             if (currentIdentity.CurrentController == null)
             {
-                this.singleLevelDirector.SpawnPlayer(devices);
+                this.singleLevelDirector.SpawnPlayer(currentIdentity.Devices);
             }
             return;
         }

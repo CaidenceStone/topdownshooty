@@ -46,6 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   WeaponName: Enemy Basic Shooter
   timeBetweenShots: 0.8
+  maximumAdditionalRandomTimeBetweenShots: 0
   projectilePF: {fileID: 8442961825726286169, guid: 2b080969317fd3a40b0adf7443426dbd, type: 3}
   randomStartSleepTimeModifierMax: 0.5
   minimumBullets: 1
@@ -76,4 +77,4 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  maximumSpread: 0.3
+  maximumSpread: 0.2

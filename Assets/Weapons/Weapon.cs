@@ -8,6 +8,8 @@ public class Weapon : MonoBehaviour
     public string WeaponName;
     [SerializeField]
     private float timeBetweenShots = .5f;
+    [SerializeField]
+    private float maximumAdditionalRandomTimeBetweenShots = 0;
     private float curTimeBetweenShots { get; set; } = 0f;
     [SerializeReference]
     private Projectile projectilePF;
@@ -60,12 +62,11 @@ public class Weapon : MonoBehaviour
             return;
         }
 
+        this.curTimeBetweenShots = this.timeBetweenShots + Random.Range(0, maximumAdditionalRandomTimeBetweenShots);
         int randomNumberOfBullets = Random.Range(this.minimumBullets, this.maximumBullets);
         for (int ii = 0; ii < randomNumberOfBullets; ii ++)
         {
             Vector2 firingDirection = (towardsPosition.normalized + Random.insideUnitCircle * this.maximumSpread).normalized;
-
-            this.curTimeBetweenShots = this.timeBetweenShots;
             Projectile newProjectile = Instantiate(this.projectilePF);
             newProjectile.transform.position = this.transform.position;
 
@@ -80,5 +81,9 @@ public class Weapon : MonoBehaviour
         {
             this.curTimeBetweenShots -= Time.deltaTime;
         }
+    }
+    public void AddCooldown(float time)
+    {
+        this.curTimeBetweenShots += time;
     }
 }

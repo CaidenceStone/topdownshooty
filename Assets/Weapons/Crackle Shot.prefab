@@ -185,9 +185,9 @@ GameObject:
   m_Component:
   - component: {fileID: 8620279113103324928}
   - component: {fileID: 243841110668817868}
-  - component: {fileID: 8442961825726286169}
+  - component: {fileID: -2298407450490476539}
   m_Layer: 6
-  m_Name: WallBounceProjectile
+  m_Name: Crackle Shot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -230,7 +230,7 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 0
---- !u!114 &8442961825726286169
+--- !u!114 &-2298407450490476539
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -239,41 +239,32 @@ MonoBehaviour:
   m_GameObject: {fileID: 7152662753347111372}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 96b1d82303775df478ac6415453ea139, type: 3}
+  m_Script: {fileID: 11500000, guid: c7c876bdf7ec4a34295e0d2ee5923f0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   body: {fileID: 243841110668817868}
   rotationPoint: {fileID: 2323638291096199031}
   Damage: 1
-  Impact: 3
-  ImpactTime: 0.15
+  Impact: 5
+  ImpactTime: 1
   ImpactOverTime:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
       value: 1
-      inSlope: -0.012867826
-      outSlope: -0.012867826
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.1791267
-    - serializedVersion: 3
-      time: 0.8
-      value: 1
-      inSlope: -0.001862721
-      outSlope: -0.001862721
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.26430923
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 1
-      value: 0
       inSlope: 0
       outSlope: 0
-      tangentMode: 0
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 34
       weightedMode: 0
       inWeight: 0
       outWeight: 0
@@ -281,11 +272,11 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   HitStunTime: 0.05
-  bounciness: 4
+  bounciness: 1
   environmentMask:
     serializedVersion: 2
     m_Bits: 256
-  lifeTimeMax: 2
+  lifeTimeMax: 1.5
   speedLossOverLifetime:
     serializedVersion: 2
     m_Curve:
@@ -299,10 +290,19 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0.33333334
     - serializedVersion: 3
-      time: 1
+      time: 0.5
       value: 0
-      inSlope: 0
-      outSlope: 0
+      inSlope: -0
+      outSlope: -0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.43333328
+    - serializedVersion: 3
+      time: 1
+      value: 0.1
+      inSlope: 0.2
+      outSlope: 0.2
       tangentMode: 34
       weightedMode: 0
       inWeight: 0.33333334
@@ -310,3 +310,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  subProjectile: {fileID: 8442961825726286169, guid: c7adb3621e9be854aa6131cdf97e7b18, type: 3}
+  subProjectileMinimumMovementSpeed: 5
+  subProjectileMaximumMovementSpeed: 10
+  timeBetweenFiring: 0.2
+  subProjectilesToFire: 5

@@ -1236,6 +1236,14 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 426744715, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
+      propertyPath: weapons.Array.size
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 426744715, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
+      propertyPath: weapons.Array.data[5]
+      value: 
+      objectReference: {fileID: 9037010792030729876, guid: ca0a3a7d98f581748a970323ee05e909, type: 3}
     - target: {fileID: 3725005177234677437, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
       propertyPath: gameCamera
       value: 

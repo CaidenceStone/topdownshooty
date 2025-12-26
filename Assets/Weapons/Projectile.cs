@@ -57,7 +57,7 @@ public class Projectile : MonoBehaviour
         this.UpdateMovementSpeed(speed);
     }
 
-    private void FixedUpdate()
+    protected virtual void FixedUpdate()
     {
         this.curLifeTimeRemaining -= Time.deltaTime;
         if (this.curLifeTimeRemaining <= 0)

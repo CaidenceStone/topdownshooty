@@ -1,3 +1,4 @@
+using NUnit.Framework.Internal;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO.Pipes;
@@ -26,6 +27,7 @@ public class SpatialReasoningCalculator : MonoBehaviour
     /// </summary>
     const float NEIGHBORLINETOLERANCE = .5f;
     public static SpatialReasoningCalculator CurrentInstance { get; private set; }
+    public static List<SpatialCoordinate> NegativeSpaceWithLegRoom { get; private set; } = new List<SpatialCoordinate>();
 
     private bool baked { get; set; } = false;
     private Dictionary<Vector2Int, SpatialCoordinate> positions { get; set; } = new Dictionary<Vector2Int, SpatialCoordinate>();
@@ -79,7 +81,7 @@ public class SpatialReasoningCalculator : MonoBehaviour
                 }
 
                 float distanceToGoal = Vector2.Distance(coord.WorldPosition, goal);
-                coordinatesToVisit.AddEntry(new PriorityQueueEntry<SpatialCoordinate>(coord, -distanceToGoal + currentEntry.Score, currentEntry));
+                coordinatesToVisit.AddEntry(new PriorityQueueEntry<SpatialCoordinate>(coord, -distanceToGoal + currentEntry.TravelCost, currentEntry.TravelCost - currentEntry.Value.NeighborsToDistances[coord], currentEntry));
                 visited.Add(coord);
             }
         }
@@ -104,6 +106,7 @@ public class SpatialReasoningCalculator : MonoBehaviour
         }
 
         this.baked = true;
+        NegativeSpaceWithLegRoom.Clear();
 
         this.positions.Clear();
         this.positions.EnsureCapacity(negativeSpace.Count);
@@ -152,9 +155,9 @@ public class SpatialReasoningCalculator : MonoBehaviour
                 // We now know what the farthest point we can draw from this point is, in the provided direction
                 // Grab all coordinates that are on that line
                 // While we're doing so, we'll track direct-line-of-sight neighbors each space can connect to
-                List<SpatialCoordinate> neighborsOnLine = await GetPositionsWithinDistanceOfLineAsync(NEIGHBORLINETOLERANCE, angleToCheck, spatialCoordinate.WorldPosition, lastPoint);
+                List<SpatialCoordinate> neighborsOnLine = await GetPositionsWithinDistanceOfLineAsync(NEIGHBORLINETOLERANCE, spatialCoordinate.WorldPosition, lastPoint, angleToCheck);
 
-                Debug.Log($"Identified {neighborsOnLine.Count} neighbors in the {raycastAnglesToCheck[ii]} angle");
+                // Debug.Log($"Identified {neighborsOnLine.Count} neighbors in the {raycastAnglesToCheck[ii]} angle");
 
                 foreach (SpatialCoordinate neighborOnLine in neighborsOnLine)
                 {
@@ -172,7 +175,11 @@ public class SpatialReasoningCalculator : MonoBehaviour
                 spatialCoordinate.ClosestWallInWorldSpace = closestWall;
             }
 
-            Debug.Log($"{spatialCoordinate.BasedOnPosition} was determined to have {spatialCoordinate.NeighborsToDistances.Count} neighbors");
+            // Debug.Log($"{spatialCoordinate.BasedOnPosition} was determined to have {spatialCoordinate.NeighborsToDistances.Count} neighbors");
+            if (closestWall > 2f)
+            {
+                NegativeSpaceWithLegRoom.Add(spatialCoordinate);
+            }
         }
 
         return new List<SpatialCoordinate>(this.positions.Values);
@@ -192,9 +199,16 @@ public class SpatialReasoningCalculator : MonoBehaviour
     {
         ConcurrentBag<SpatialCoordinate> spatialCoordinatesWithinDistanceOfLine = new ConcurrentBag<SpatialCoordinate>();
 
-        List<Task> tasksToWaitFor = new List<Task>(CurrentInstance.positions.Count);
+        int negativeSpaceWithLegRoomCount = NegativeSpaceWithLegRoom.Count;
+        List<Task> tasksToWaitFor = new List<Task>(negativeSpaceWithLegRoomCount);
+        IReadOnlyList<SpatialCoordinate> negativeSpace = NegativeSpaceWithLegRoom;
 
-        foreach (SpatialCoordinate curCoordinate in CurrentInstance.positions.Values)
+        if (negativeSpaceWithLegRoomCount == 0)
+        {
+            negativeSpace = MapGenerator.NegativeSpace;
+        }
+
+        foreach (SpatialCoordinate curCoordinate in negativeSpace)
         {
             SpatialCoordinate curCoordinateHang = curCoordinate;
             if (IsClosestDistanceToLineWithinThreshold(curCoordinateHang.WorldPosition, pointA, pointB, precalculatedLineDirection, distancePermitted))
@@ -203,7 +217,7 @@ public class SpatialReasoningCalculator : MonoBehaviour
             }
         }
 
-        Debug.Log($"{spatialCoordinatesWithinDistanceOfLine.Count} detected");
+        // Debug.Log($"{spatialCoordinatesWithinDistanceOfLine.Count} detected");
 
         return spatialCoordinatesWithinDistanceOfLine.ToList();
     }

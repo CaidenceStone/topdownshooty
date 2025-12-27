@@ -6,8 +6,8 @@ public class SpatialCoordinate
 {
     public readonly Vector2Int BasedOnPosition;
     public readonly Vector2 WorldPosition;
-    public float ClosestWallInWorldSpace { get; set; }
-    public readonly Dictionary<SpatialCoordinate, float> NeighborsToDistances = new Dictionary<SpatialCoordinate, float>();
+    public double ClosestWallInWorldSpace { get; set; }
+    public readonly Dictionary<SpatialCoordinate, double> NeighborsToDistances = new Dictionary<SpatialCoordinate, double>();
 
     public SpatialCoordinate(Vector2Int basedOnPosition)
     {

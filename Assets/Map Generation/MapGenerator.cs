@@ -39,6 +39,8 @@ public class MapGenerator : MonoBehaviour
 
     public async Task GenerateWorld()
     {
+        MapReady = false;
+
         List<SpatialCoordinate> negativeSpace = await this.plan.GenerateMapAsync(this.transform, this.MyTilemap);
         NegativeSpace = negativeSpace;
 
@@ -58,6 +60,10 @@ public class MapGenerator : MonoBehaviour
 
     public static Vector2 GetRandomNegativeSpacePointAtDistanceRangeFromPoint(Vector2 near, float minDistance, float maxDistance)
     {
+        if (SpatialReasoningCalculator.NegativeSpaceWithLegRoom.Count != 0)
+        {
+            return GetRandomNegativeSpacePointAtDistanceRangeFromPoint(near, SpatialReasoningCalculator.NegativeSpaceWithLegRoom, minDistance, maxDistance);
+        }
         return GetRandomNegativeSpacePointAtDistanceRangeFromPoint(near, NegativeSpace, minDistance, maxDistance);
     }
 
@@ -72,21 +78,28 @@ public class MapGenerator : MonoBehaviour
         if (near.Count == 0)
         {
             Debug.Log($"Asked to get a negative space away from nothing");
-            return Vector2Int.zero;
+            return Vector2.zero;
         }
+
+        IReadOnlyList<SpatialCoordinate> coordinates = NegativeSpace;
 
         if (NegativeSpace.Count == 0)
         {
             Debug.Log($"There is no negative space.");
-            return Vector2Int.zero;
+            return Vector2.zero;
         }
 
-        Vector2Int randomSpace = Vector2Int.zero;
+        if (SpatialReasoningCalculator.NegativeSpaceWithLegRoom.Count > 0)
+        {
+            coordinates = SpatialReasoningCalculator.NegativeSpaceWithLegRoom;
+        }
+
+        Vector2 randomSpace = Vector2.zero;
         for (int ii = 0; ii < GETRANDOMNEARBYMAXITERATIONS; ii++)
         {
             foreach (Vector2 nearPoint in near)
             {
-                randomSpace = NegativeSpace[UnityEngine.Random.Range(0, NegativeSpace.Count)].BasedOnPosition;
+                randomSpace = coordinates[UnityEngine.Random.Range(0, coordinates.Count)].WorldPosition;
                 float distance = Vector2.Distance(randomSpace, nearPoint);
 
                 if (distance > minDistance && distance < maxDistance)
@@ -135,6 +148,29 @@ public class MapGenerator : MonoBehaviour
             int randomIndex = UnityEngine.Random.Range(0, subset.Count);
             randomSpace = subset[randomIndex].BasedOnPosition;
             float distance = Vector2.Distance(randomSpace, near);
+
+            if (distance > minDistance && distance < maxDistance)
+            {
+                return randomSpace;
+            }
+        }
+        return randomSpace;
+    }
+
+    public static Vector2Int GetRandomNegativeSpacePointAtDistanceRangeFromPoint(SpatialCoordinate near, IReadOnlyList<SpatialCoordinate> subset, float minDistance, float maxDistance)
+    {
+        if (subset.Count == 0)
+        {
+            Debug.Log("Asked to pick from an empty subset");
+            return default(Vector2Int);
+        }
+
+        Vector2Int randomSpace = Vector2Int.zero;
+        for (int ii = 0; ii < GETRANDOMNEARBYMAXITERATIONS; ii++)
+        {
+            int randomIndex = UnityEngine.Random.Range(0, subset.Count);
+            randomSpace = subset[randomIndex].BasedOnPosition;
+            float distance = Vector2.Distance(randomSpace, near.WorldPosition);
 
             if (distance > minDistance && distance < maxDistance)
             {

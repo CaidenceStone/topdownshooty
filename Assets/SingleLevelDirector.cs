@@ -158,7 +158,7 @@ public class SingleLevelDirector : MonoBehaviour
                 Debug.Log($"No more spawn tickets are active");
                 break;
             }
-            Vector2 positionToSpawn = (Vector2)MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoints(currentCharacterPositions, this.minimumEnemySpawnStartDistance, float.MaxValue) / MapGenerator.COORDINATETOPOSITIONDIVISOR;
+            Vector2 positionToSpawn = MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoints(currentCharacterPositions, this.minimumEnemySpawnStartDistance, float.MaxValue);
             Entity newEntity = Instantiate(entityPF, this.transform);
             newEntity.transform.position = positionToSpawn;
         }
@@ -167,7 +167,7 @@ public class SingleLevelDirector : MonoBehaviour
         Debug.Log($"Spawning {weaponDropCount} initial weapon drops");
         for (int ii = 0; ii < weaponDropCount; ii++)
         {
-            Vector2 positionToSpawn = (Vector2)MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoints(currentCharacterPositions, this.minimumDistanceFromStartCircle, float.MaxValue) / MapGenerator.COORDINATETOPOSITIONDIVISOR;
+            Vector2 positionToSpawn = MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoints(currentCharacterPositions, this.minimumDistanceFromStartCircle, float.MaxValue);
             this.dropManager.DoDropWeapon(positionToSpawn);
         }
 

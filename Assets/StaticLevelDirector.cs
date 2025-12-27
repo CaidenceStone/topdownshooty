@@ -16,6 +16,7 @@ public static class StaticLevelDirector
     {
         GameActive = false;
         LoadedLevel = 1;
+        SpatialReasoningCalculator.NegativeSpaceWithLegRoom.Clear();
         SceneManager.LoadScene(0, LoadSceneMode.Single);
     }
 

@@ -47,15 +47,15 @@ public class MapGenerator : MonoBehaviour
         MapReady = true;
     }
 
-    public static Vector2Int GetAnyRandomNegativeSpace()
+    public static Vector2Int GetAnyRandomNegativeSpace(List<SpatialCoordinate> fromList)
     {
-        if (NegativeSpace.Count == 0)
+        if (fromList.Count == 0)
         {
             Debug.Log($"There is no negative space to retrieve.");
             return Vector2Int.zero;
         }
 
-        return NegativeSpace[UnityEngine.Random.Range(0, NegativeSpace.Count - 1)].BasedOnPosition;
+        return fromList[UnityEngine.Random.Range(0, fromList.Count - 1)].BasedOnPosition;
     }
 
     public static Vector2 GetRandomNegativeSpacePointAtDistanceRangeFromPoint(Vector2 near, float minDistance, float maxDistance)
@@ -108,6 +108,7 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }
+        Debug.Log("Failed to find any suitable space");
         return randomSpace;
     }
 

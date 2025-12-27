@@ -104,11 +104,17 @@ public class Enemy : Entity
         // Debug.Log($"I made a path going from {this.Body.position} to {playerPosition} that is {this.currentPath.PathPointsCount} path points");
     }
 
-    protected virtual void OnDrawGizmos()
+    private void OnDrawGizmosSelected()
     {
         if (primaryTarget != null && this.currentPath != null && !this.currentPath.IsComplete)
         {
-            Debug.DrawLine(this.Body.position, this.currentPath.Destination, Color.green);
+            Vector2 previousNode = this.Body.position;
+
+            for (int ii = 0; ii < this.currentPath.PathPointsCount; ii++)
+            {
+                Debug.DrawLine(currentPath.PathPoints[ii], previousNode, Color.green);
+                previousNode = currentPath.PathPoints[ii];
+            }
         }
     }
 }

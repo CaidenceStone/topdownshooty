@@ -12,14 +12,14 @@ public class Path
 
     public Vector2 NextWaypoint { get; private set; }
     public bool IsComplete { get; private set; } = false;
-    private List<Vector2> pathPoints { get; set; } = new List<Vector2>();
+    public List<Vector2> PathPoints { get; set; } = new List<Vector2>();
     private float InitialLength { get; set; } = 0;
 
     public int PathPointsCount
     {
         get
         {
-            return this.pathPoints.Count;
+            return this.PathPoints.Count;
         }
     }
 
@@ -39,10 +39,10 @@ public class Path
             this.InitialLength += Vector2.Distance(position.WorldPosition, previousPosition);
             previousPosition = position.WorldPosition;
             this.Destination = position.WorldPosition;
-            this.pathPoints.Add(position.WorldPosition);
+            this.PathPoints.Add(position.WorldPosition);
         }
 
-        this.NextWaypoint = this.pathPoints[0];
+        this.NextWaypoint = this.PathPoints[0];
     }
 
     public Vector2 ApproachWaypointByDistance(Vector2 currentPosition, float byDistance, out float remainingDistance)
@@ -69,13 +69,13 @@ public class Path
 
     private void Advance()
     {
-        if (this.pathPoints.Count <= 1)
+        if (this.PathPoints.Count <= 1)
         {
             this.IsComplete = true;
             return;
         }
 
-        this.pathPoints.RemoveAt(0);
-        this.NextWaypoint = this.pathPoints[0];
+        this.PathPoints.RemoveAt(0);
+        this.NextWaypoint = this.PathPoints[0];
     }
 }

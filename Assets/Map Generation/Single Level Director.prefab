@@ -50,6 +50,7 @@ MonoBehaviour:
   - {fileID: 9037010792030729876, guid: acba6bd00652d3847b181dd53af581c4, type: 3}
   - {fileID: 9037010792030729876, guid: 68ed9b55caa6ea84184093c7caa1ff8f, type: 3}
   - {fileID: 9037010792030729876, guid: 172dd65378f89aa46af2619a795d52ba, type: 3}
+  - {fileID: 9037010792030729876, guid: ca0a3a7d98f581748a970323ee05e909, type: 3}
   dropChance: 0.1
   singleLevelDirector: {fileID: 3725005178417904506}
 --- !u!1 &522557413775834177
@@ -63,6 +64,7 @@ GameObject:
   - component: {fileID: 2460866885791267649}
   - component: {fileID: 8296038979404345774}
   - component: {fileID: 5623155821762939614}
+  - component: {fileID: 2967602753440821132}
   m_Layer: 8
   m_Name: Tilemap
   m_TagString: Untagged
@@ -81,7 +83,7 @@ Transform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 5783962004366829803}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -175,6 +177,44 @@ TilemapRenderer:
   m_Mode: 0
   m_DetectChunkCullingBounds: 0
   m_MaskInteraction: 0
+--- !u!19719996 &2967602753440821132
+TilemapCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 522557413775834177}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_MaximumTileChangeCount: 1000
+  m_ExtrusionFactor: 0
+  m_UseDelaunayMesh: 0
 --- !u!1 &2477887347584343636
 GameObject:
   m_ObjectHideFlags: 0
@@ -185,7 +225,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5783962004366829803}
   - component: {fileID: 7149432509483487600}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Grid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -200,10 +240,10 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2477887347584343636}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2460866885791267649}
   m_Father: {fileID: 3725005177234677436}
@@ -216,7 +256,7 @@ Grid:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2477887347584343636}
   m_Enabled: 1
-  m_CellSize: {x: 1, y: 1, z: 0}
+  m_CellSize: {x: 0.5, y: 0.5, z: 0.5}
   m_CellGap: {x: 0, y: 0, z: 0}
   m_CellLayout: 0
   m_CellSwizzle: 0
@@ -230,8 +270,6 @@ GameObject:
   m_Component:
   - component: {fileID: 3725005177234677436}
   - component: {fileID: 3725005177234677437}
-  - component: {fileID: 1789731329319567464}
-  - component: {fileID: 4573870230306765664}
   m_Layer: 0
   m_Name: Map Generator
   m_TagString: Untagged
@@ -247,7 +285,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3725005177234677438}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -268,58 +306,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d19a26324396b9a43b1f2e14d884a8ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Surface: {fileID: 1789731329319567464}
-  walkableSurfaceTransform: {fileID: 5503500266944825062}
-  MyTilemap: {fileID: 0}
+  MyTilemap: {fileID: 8296038979404345774}
   plan: {fileID: 11400000, guid: f33c6ca96c8ccee4a8e64c46f1685e76, type: 2}
   gameCamera: {fileID: 0}
---- !u!114 &1789731329319567464
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3725005177234677438}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e04976799df50f54ba128eff723155a7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_AgentTypeID: 0
-  m_CollectObjects: 0
-  m_Size: {x: 10, y: 10, z: 10}
-  m_Center: {x: 0, y: 2, z: 0}
-  m_LayerMask:
-    serializedVersion: 2
-    m_Bits: 2147483648
-  m_UseGeometry: 0
-  m_DefaultArea: 0
-  m_IgnoreNavMeshAgent: 1
-  m_IgnoreNavMeshObstacle: 1
-  m_OverrideTileSize: 0
-  m_TileSize: 256
-  m_OverrideVoxelSize: 0
-  m_VoxelSize: 0.16666667
-  m_BuildHeightMesh: 0
-  m_MinRegionArea: 0
-  m_HideEditorLogs: 0
-  m_NavMeshData: {fileID: 23800000, guid: 43026705772d5b54b949d95632243ac0, type: 2}
---- !u!114 &4573870230306765664
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3725005177234677438}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 70bd44a44cd62c64fbfc1eea95b24880, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_OverrideByGrid: 0
-  m_UseMeshPrefab: {fileID: 0}
-  m_CompressBounds: 0
-  m_OverrideVector: {x: 1, y: 1, z: 1}
 --- !u!1 &3725005178417904507
 GameObject:
   m_ObjectHideFlags: 0
@@ -376,7 +365,7 @@ MonoBehaviour:
   maximumDistanceFromStartCircle: 8
   minimumEnemySpawnStartDistance: 20
   minWeaponDropsToStart: 0
-  maxWeaponDropsToStart: 5
+  maxWeaponDropsToStart: 0
   minWeaponDropStartDistance: 5
   dropManager: {fileID: 426744715}
   enemySpawnSettingsProvider: {fileID: 0}
@@ -390,6 +379,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5503500266944825062}
   - component: {fileID: 6428356112177159654}
+  - component: {fileID: 7870837212235362098}
   m_Layer: 31
   m_Name: Walkable Detector
   m_TagString: Untagged
@@ -467,3 +457,19 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &7870837212235362098
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7774973567067543834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_OverrideArea: 1
+  m_Area: 0
+  m_IgnoreFromBuild: 0
+  m_AffectedAgents: ffffffff

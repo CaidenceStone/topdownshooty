@@ -98,7 +98,12 @@ public class SingleLevelDirector : MonoBehaviour
 
         yield return null;
 
-        Vector2Int startPlayCirclePosition = MapGenerator.GetAnyRandomNegativeSpace();
+        if (SpatialReasoningCalculator.NegativeSpaceWithLegRoom.Count == 0)
+        {
+            Debug.Log($"Spawning player start position with no leg room spawn points. They'll possibly get stuck in a wall!");
+        }
+
+        Vector2Int startPlayCirclePosition = MapGenerator.GetAnyRandomNegativeSpace(SpatialReasoningCalculator.NegativeSpaceWithLegRoom);
         this.startPlayCircle.transform.position = (Vector2)(startPlayCirclePosition) / MapGenerator.COORDINATETOPOSITIONDIVISOR;
         this.gameplayCamera.SnapPosition(this.startPlayCircle.transform.position);
 
@@ -136,6 +141,11 @@ public class SingleLevelDirector : MonoBehaviour
             StaticLevelDirector.RegisterInputPlayer(fromDevices, newController);
             newController.OwnWeaponCollection.InitializeWeaponCollection(newController);
             newIdentity.WeaponData = newController.OwnWeaponCollection.Data;
+        }
+
+        if (SpatialReasoningCalculator.NegativeSpaceWithLegRoom.Count == 0)
+        {
+            Debug.Log($"Spawning player wiuth no leg room spawn points. They'll possibly get stuck in a wall!");
         }
 
         this.PlayerStartingPosition = MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoint

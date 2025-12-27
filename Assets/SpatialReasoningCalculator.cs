@@ -17,7 +17,8 @@ public class SpatialReasoningCalculator : MonoBehaviour
     /// Having a higher value results in smoother neighbor gradiations during pathfinding.
     /// Having a lower value decreases computation time and space for map baking.
     /// </summary>
-    const float MAXIMUMNEIGHBORDISTANCE = 5f;
+    const float MAXIMUMNEIGHBORDISTANCE = 2.5f;
+
 
     /// <summary>
     /// When determining if a coordinate is close enough to a line, it needs to be no farther than
@@ -25,18 +26,25 @@ public class SpatialReasoningCalculator : MonoBehaviour
     /// Higher numbers result in larger, fuzzier areas.
     /// Lower numbers result in faster computation time, but risks false negatives.
     /// </summary>
-    const float NEIGHBORLINETOLERANCE = .5f;
+    const float NEIGHBORLINETOLERANCE = .075f;
+
+    const float SPHERECASTNEIGHBORCHECKRADIUS = .3f;
+
+    const float OVERLAPINITIALCHECKCIRCLERADIUS = .3f;
+
     public static SpatialReasoningCalculator CurrentInstance { get; private set; }
     public static List<SpatialCoordinate> NegativeSpaceWithLegRoom { get; private set; } = new List<SpatialCoordinate>();
 
     private bool baked { get; set; } = false;
-    private Dictionary<Vector2Int, SpatialCoordinate> positions { get; set; } = new Dictionary<Vector2Int, SpatialCoordinate>();
+    public Dictionary<Vector2Int, SpatialCoordinate> Positions { get; set; } = new Dictionary<Vector2Int, SpatialCoordinate>();
 
     [SerializeField]
     private LayerMask environmentLayerMask;
     [SerializeField]
-    private float[] raycastAnglesToCheck = new float[] { 0f, 90f, 180f, 270f };
+    private int raycastDivisionSteps = 4 * 4 * 4;
     private Vector2[] raycastAnglesToCheckVector2s { get; set; } = new Vector2[] { };
+    [SerializeReference]
+    public Transform MapGeneratorTransform;
 
     private static List<SpatialCoordinate> spatialCoordinatesReusableList { get; set; } = new List<SpatialCoordinate>();
 
@@ -45,7 +53,7 @@ public class SpatialReasoningCalculator : MonoBehaviour
         Vector2 worldspacedStartingCoordinate = startingPosition * MapGenerator.COORDINATETOPOSITIONDIVISOR;
         Vector2Int startingCoordinate = new Vector2Int(Mathf.RoundToInt(worldspacedStartingCoordinate.x), Mathf.RoundToInt(worldspacedStartingCoordinate.y));
 
-        if (!this.positions.TryGetValue(startingCoordinate, out SpatialCoordinate startingSpatialCoordinate))
+        if (!this.Positions.TryGetValue(startingCoordinate, out SpatialCoordinate startingSpatialCoordinate))
         {
             Debug.Log($"Cannot find path from startingPosition {startingPosition} {startingCoordinate}, because that coordinate is not on the map");
             return null;
@@ -54,7 +62,7 @@ public class SpatialReasoningCalculator : MonoBehaviour
         Vector2 worldspacedGoalCoordinate = goal * MapGenerator.COORDINATETOPOSITIONDIVISOR;
         Vector2Int goalCoordinate = new Vector2Int(Mathf.RoundToInt(worldspacedGoalCoordinate.x), Mathf.RoundToInt(worldspacedGoalCoordinate.y));
 
-        if (!this.positions.TryGetValue(goalCoordinate, out SpatialCoordinate goalSpatialCoordinate))
+        if (!this.Positions.TryGetValue(goalCoordinate, out SpatialCoordinate goalSpatialCoordinate))
         {
             Debug.Log($"Cannot find path from goal {goal} {goalCoordinate}, because that coordinate is not on the map");
             return null;
@@ -81,7 +89,8 @@ public class SpatialReasoningCalculator : MonoBehaviour
                 }
 
                 float distanceToGoal = Vector2.Distance(coord.WorldPosition, goal);
-                coordinatesToVisit.AddEntry(new PriorityQueueEntry<SpatialCoordinate>(coord, -distanceToGoal + currentEntry.TravelCost, currentEntry.TravelCost - currentEntry.Value.NeighborsToDistances[coord], currentEntry));
+                double distanceTowardsNode = currentEntry.TravelCost - currentEntry.Value.NeighborsToDistances[coord];
+                coordinatesToVisit.AddEntry(new PriorityQueueEntry<SpatialCoordinate>(coord, -distanceToGoal + currentEntry.TravelCost, currentEntry.TravelCost - distanceTowardsNode, currentEntry));
                 visited.Add(coord);
             }
         }
@@ -102,87 +111,23 @@ public class SpatialReasoningCalculator : MonoBehaviour
             if (CurrentInstance == null)
             {
                 Debug.Log($"Could not find a SpatialReasoningCalculator in the scene");
+                return null;
             }
         }
 
         this.baked = true;
         NegativeSpaceWithLegRoom.Clear();
 
-        this.positions.Clear();
-        this.positions.EnsureCapacity(negativeSpace.Count);
+        this.Positions.Clear();
+        this.Positions.EnsureCapacity(negativeSpace.Count);
 
-        int raycastAnglesLength = this.raycastAnglesToCheck.Length;
-        this.raycastAnglesToCheckVector2s = new Vector2[raycastAnglesLength];
-        for (int ii = 0; ii < raycastAnglesLength; ii++)
-        {
-            raycastAnglesToCheckVector2s[ii] = new Vector2(Mathf.Cos(raycastAnglesToCheck[ii]), Mathf.Sin(raycastAnglesToCheck[ii]));
-        }
+        SetNegativeSpace(negativeSpace);
 
-        // Build a lookup table of positions to saturated spatial coordinates
-        // Go through each position and create a spot in memory for it
-        this.positions = new Dictionary<Vector2Int, SpatialCoordinate>();
+        Debug.Log($"{Positions.Count} positions have been generated for the initial batch");
 
-        foreach (Vector2Int position in negativeSpace)
-        {
-            this.positions.Add(position, new SpatialCoordinate(position));
-        }
+        BakeNeighbors(MapGeneratorTransform);
 
-        Debug.Log($"{positions.Count} positions have been generated for the initial batch");
-
-        // Now that we have a lookup table of each of these, we can build relationships
-        foreach (SpatialCoordinate spatialCoordinate in this.positions.Values)
-        {
-            float closestWall = float.MaxValue;
-            // For a set of predetermined directions, project a raycast
-            // We can determine what neighbors have a clear shot from this space, and what the closest wall overall is
-            for (int ii = 0; ii < raycastAnglesLength; ii++)
-            {
-                Vector2 angleToCheck = raycastAnglesToCheckVector2s[ii];
-                RaycastHit2D hit = Physics2D.Raycast(spatialCoordinate.WorldPosition, angleToCheck, MAXIMUMNEIGHBORDISTANCE, environmentLayerMask);
-
-                Vector2 lastPoint;
-
-                if (hit.collider != null)
-                {
-                    closestWall = Mathf.Min(closestWall, hit.distance);
-                    lastPoint = hit.point;
-                }
-                else
-                {
-                    lastPoint = spatialCoordinate.WorldPosition + angleToCheck * MAXIMUMNEIGHBORDISTANCE;
-                }
-
-                // We now know what the farthest point we can draw from this point is, in the provided direction
-                // Grab all coordinates that are on that line
-                // While we're doing so, we'll track direct-line-of-sight neighbors each space can connect to
-                List<SpatialCoordinate> neighborsOnLine = await GetPositionsWithinDistanceOfLineAsync(NEIGHBORLINETOLERANCE, spatialCoordinate.WorldPosition, lastPoint, angleToCheck);
-
-                // Debug.Log($"Identified {neighborsOnLine.Count} neighbors in the {raycastAnglesToCheck[ii]} angle");
-
-                foreach (SpatialCoordinate neighborOnLine in neighborsOnLine)
-                {
-                    // Have we already answered this question? If so, skip
-                    if (spatialCoordinate.NeighborsToDistances.ContainsKey(neighborOnLine) || ReferenceEquals(neighborOnLine, spatialCoordinate))
-                    {
-                        continue;
-                    }
-
-                    float distanceToNeighbor = Vector2.Distance(neighborOnLine.WorldPosition, spatialCoordinate.WorldPosition);
-                    neighborOnLine.NeighborsToDistances.Add(spatialCoordinate, distanceToNeighbor);
-                    spatialCoordinate.NeighborsToDistances.Add(neighborOnLine, distanceToNeighbor);
-                }
-
-                spatialCoordinate.ClosestWallInWorldSpace = closestWall;
-            }
-
-            // Debug.Log($"{spatialCoordinate.BasedOnPosition} was determined to have {spatialCoordinate.NeighborsToDistances.Count} neighbors");
-            if (closestWall > 2f)
-            {
-                NegativeSpaceWithLegRoom.Add(spatialCoordinate);
-            }
-        }
-
-        return new List<SpatialCoordinate>(this.positions.Values);
+        return new List<SpatialCoordinate>(this.Positions.Values);
     }
 
     private void OnEnable()
@@ -195,23 +140,17 @@ public class SpatialReasoningCalculator : MonoBehaviour
         CurrentInstance = null;
     }
 
-    public static async Task<List<SpatialCoordinate>> GetPositionsWithinDistanceOfLineAsync(float distancePermitted, Vector2 pointA, Vector2 pointB, Vector2 precalculatedLineDirection)
+    public static List<SpatialCoordinate> GetPositionsWithinDistanceOfLine(float distancePermitted, Vector2 pointA, Vector2 pointB, Vector2 precalculatedLineDirection)
     {
-        ConcurrentBag<SpatialCoordinate> spatialCoordinatesWithinDistanceOfLine = new ConcurrentBag<SpatialCoordinate>();
 
-        int negativeSpaceWithLegRoomCount = NegativeSpaceWithLegRoom.Count;
-        List<Task> tasksToWaitFor = new List<Task>(negativeSpaceWithLegRoomCount);
-        IReadOnlyList<SpatialCoordinate> negativeSpace = NegativeSpaceWithLegRoom;
-
-        if (negativeSpaceWithLegRoomCount == 0)
-        {
-            negativeSpace = MapGenerator.NegativeSpace;
-        }
+        int negativeSpaceRoomCount = MapGenerator.NegativeSpace.Count;
+        List<SpatialCoordinate> spatialCoordinatesWithinDistanceOfLine = new List<SpatialCoordinate>(negativeSpaceRoomCount);
+        IReadOnlyList<SpatialCoordinate> negativeSpace = MapGenerator.NegativeSpace;
 
         foreach (SpatialCoordinate curCoordinate in negativeSpace)
         {
             SpatialCoordinate curCoordinateHang = curCoordinate;
-            if (IsClosestDistanceToLineWithinThreshold(curCoordinateHang.WorldPosition, pointA, pointB, precalculatedLineDirection, distancePermitted))
+            if (IsPointCloseEnoughToLine(curCoordinateHang.WorldPosition, pointA, pointB, precalculatedLineDirection, distancePermitted))
             {
                 spatialCoordinatesWithinDistanceOfLine.Add(curCoordinateHang);
             }
@@ -230,18 +169,7 @@ public class SpatialReasoningCalculator : MonoBehaviour
             precalculatedTrustedLineDirection = linePointB - linePointA;
         }
         Vector2 differenceFromLine = positionToCheck - linePointA;
-        float t = Vector2.Dot(differenceFromLine, precalculatedTrustedLineDirection.Value);
-
-        if (t < 0)
-        {
-            return Vector2.Distance(positionToCheck, linePointA);
-        }
-
-        if  (t > differenceFromLine.magnitude)
-        {
-            return Vector2.Distance(positionToCheck, linePointB);
-        }
-
+        float t = Mathf.Clamp(Vector2.Dot(differenceFromLine, precalculatedTrustedLineDirection.Value), 0, (linePointA - linePointB).magnitude);
         return Vector2.Distance(positionToCheck, linePointA + precalculatedTrustedLineDirection.Value * t);
     }
 
@@ -267,11 +195,6 @@ public class SpatialReasoningCalculator : MonoBehaviour
             placeToStart = remainingCoordinatesToCheck.First();
             remainingCoordinatesToCheck.Remove(placeToStart);
 
-            if (placeToStart.ClosestWallInWorldSpace < minimumWallProximity)
-            {
-                continue;
-            }
-
             List<SpatialCoordinate> thisIslandCoordinates = new List<SpatialCoordinate>(negativeSpaceList.Count);
             List<SpatialCoordinate> nextCheckList = new List<SpatialCoordinate>(negativeSpaceList.Count);
             nextCheckList.Add(placeToStart);
@@ -295,17 +218,6 @@ public class SpatialReasoningCalculator : MonoBehaviour
 
             // If we've reached here, we couldn't find any neighbors-of-neighbors
             islands.Add(thisIslandCoordinates);
-
-            // Try to find the next coordinate to use by arbitrarily grabbing the 'first'
-            while (remainingCoordinatesToCheck.Count > 0)
-            {
-                // Keep looking until we find valid coordinates
-                SpatialCoordinate nextPositionToCheck = remainingCoordinatesToCheck.First();
-                remainingCoordinatesToCheck.Remove(nextPositionToCheck);
-                // Back to the outer loop
-
-                break;
-            }
         }
 
         if (islands.Count == 0)
@@ -344,9 +256,9 @@ public class SpatialReasoningCalculator : MonoBehaviour
 
     public void LimitTo(HashSet<SpatialCoordinate> limitingSubset)
     {
-        List<SpatialCoordinate> limitingTo = new List<SpatialCoordinate>(this.positions.Count);
+        List<SpatialCoordinate> limitingTo = new List<SpatialCoordinate>(this.Positions.Count);
 
-        foreach (SpatialCoordinate coordinate in new List<SpatialCoordinate>(this.positions.Values))
+        foreach (SpatialCoordinate coordinate in new List<SpatialCoordinate>(this.Positions.Values))
         {
             if (!limitingSubset.Contains(coordinate))
             {
@@ -355,7 +267,7 @@ public class SpatialReasoningCalculator : MonoBehaviour
                     neighboringCoordinate.NeighborsToDistances.Remove(coordinate);
                 }
                 coordinate.NeighborsToDistances.Clear();
-                positions.Remove(coordinate.BasedOnPosition);
+                Positions.Remove(coordinate.BasedOnPosition);
             }
             else
             {
@@ -366,8 +278,122 @@ public class SpatialReasoningCalculator : MonoBehaviour
         MapGenerator.NegativeSpace = limitingTo;
     }
 
-    public static bool IsClosestDistanceToLineWithinThreshold(Vector2 position, Vector2 linePointA, Vector2 linePointB, Vector2 precalculatedTrustedLineDirection, float threshold)
+    public static bool IsPointCloseEnoughToLine(Vector2 position, Vector2 linePointA, Vector2 linePointB, Vector2 precalculatedTrustedLineDirection, float threshold)
     {
         return GetClosestDistanceFromLineSegment(position, linePointA, linePointB, precalculatedTrustedLineDirection) <= threshold;
+    }
+
+    public static void SetNegativeSpace(IReadOnlyCollection<Vector2Int> space)
+    {
+        // Build a lookup table of positions to saturated spatial coordinates
+        // Go through each position and create a spot in memory for it
+        CurrentInstance.Positions.Clear();
+        List<SpatialCoordinate> spatialCoordinates = new List<SpatialCoordinate>();
+
+        foreach (Vector2Int position in space)
+        {
+            SpatialCoordinate newCoordinate = new SpatialCoordinate(position);
+            CurrentInstance.Positions.Add(position, newCoordinate);
+            spatialCoordinates.Add(newCoordinate);
+        }
+
+        MapGenerator.NegativeSpace = spatialCoordinates;
+    }
+
+    public static void BakeNeighbors(Transform ignoreTransformParent)
+    {
+        CurrentInstance.raycastAnglesToCheckVector2s = new Vector2[CurrentInstance.raycastDivisionSteps];
+        int raycastAnglesLength = CurrentInstance.raycastDivisionSteps;
+        CurrentInstance.raycastAnglesToCheckVector2s = new Vector2[raycastAnglesLength];
+        for (int ii = 0; ii < raycastAnglesLength; ii++)
+        {
+            float angle = Mathf.Lerp(0, 360f, (float)ii / (float)raycastAnglesLength);
+            CurrentInstance.raycastAnglesToCheckVector2s[ii] = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
+        }
+
+        // Now that we have a lookup table of each of these, we can build relationships
+        foreach (SpatialCoordinate spatialCoordinate in CurrentInstance.Positions.Values)
+        {
+            if (Physics2D.OverlapCircle(spatialCoordinate.WorldPosition, OVERLAPINITIALCHECKCIRCLERADIUS, CurrentInstance.environmentLayerMask))
+            {
+                continue;
+            }
+
+            float closestWall = float.MaxValue;
+            // For a set of predetermined directions, project a raycast
+            // We can determine what neighbors have a clear shot from this space, and what the closest wall overall is
+            for (int ii = 0; ii < CurrentInstance.raycastDivisionSteps; ii++)
+            {
+                Vector2 angleToCheck = CurrentInstance.raycastAnglesToCheckVector2s[ii];
+                RaycastHit2D[] hits = Physics2D.CircleCastAll(spatialCoordinate.WorldPosition, SPHERECASTNEIGHBORCHECKRADIUS, angleToCheck, MAXIMUMNEIGHBORDISTANCE, CurrentInstance.environmentLayerMask);
+
+                Vector2 lastPoint = spatialCoordinate.WorldPosition + angleToCheck * MAXIMUMNEIGHBORDISTANCE;
+
+                for (int innerHitColliderIndex = 0; innerHitColliderIndex < hits.Length; innerHitColliderIndex++)
+                {
+                    RaycastHit2D hit = hits[innerHitColliderIndex];
+
+                    if (hit.transform.IsChildOf(ignoreTransformParent))
+                    {
+                        // continue;
+                    }
+
+                    Collider2D thisCollider = hit.collider;
+
+                    if (thisCollider != null)
+                    {
+                        float distance = hit.distance;
+                        if (closestWall > distance)
+                        {
+                            closestWall = Mathf.Min(closestWall, distance);
+                            lastPoint = spatialCoordinate.WorldPosition + angleToCheck * distance;
+                        }
+                    }
+                }
+
+                // We now know what the farthest point we can draw from this point is, in the provided direction
+                // Grab all coordinates that are on that line
+                // While we're doing so, we'll track direct-line-of-sight neighbors each space can connect to
+                List<SpatialCoordinate> neighborsOnLine = GetPositionsWithinDistanceOfLine(NEIGHBORLINETOLERANCE, spatialCoordinate.WorldPosition, lastPoint, angleToCheck);
+
+                // Debug.Log($"Identified {neighborsOnLine.Count} neighbors in the {raycastAnglesToCheck[ii]} angle");
+
+                foreach (SpatialCoordinate neighborOnLine in neighborsOnLine)
+                {
+                    // Have we already answered this question? If so, skip
+                    if (spatialCoordinate.NeighborsToDistances.ContainsKey(neighborOnLine) || ReferenceEquals(neighborOnLine, spatialCoordinate))
+                    {
+                        continue;
+                    }
+
+                    float distanceToNeighbor = Vector2.Distance(neighborOnLine.WorldPosition, spatialCoordinate.WorldPosition);
+                    neighborOnLine.NeighborsToDistances.Add(spatialCoordinate, distanceToNeighbor);
+                    spatialCoordinate.NeighborsToDistances.Add(neighborOnLine, distanceToNeighbor);
+                }
+            }
+
+            // Debug.Log($"{spatialCoordinate.BasedOnPosition} was determined to have {spatialCoordinate.NeighborsToDistances.Count} neighbors. Closest wall was {closestWall}.");
+            spatialCoordinate.ClosestWallInWorldSpace = closestWall;
+            if (closestWall > 2f)
+            {
+                NegativeSpaceWithLegRoom.Add(spatialCoordinate);
+            }
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Color colorA = Color.white;
+        Color colorB = Color.red;
+        double distanceForMaxColoration = 5f;
+
+        foreach (SpatialCoordinate coordinate in this.Positions.Values)
+        {
+            foreach (SpatialCoordinate coordinateNeighbor in coordinate.NeighborsToDistances.Keys)
+            {
+                Gizmos.color = Color.Lerp(colorA, colorB, (float)(coordinate.NeighborsToDistances[coordinateNeighbor] / distanceForMaxColoration));
+                Gizmos.DrawLine(coordinate.WorldPosition, coordinateNeighbor.WorldPosition);
+            }
+        }
     }
 }

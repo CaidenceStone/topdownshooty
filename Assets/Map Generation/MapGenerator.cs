@@ -1,7 +1,9 @@
+using NavMeshPlus.Components;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class MapGenerator : MonoBehaviour
 {
@@ -13,12 +15,16 @@ public class MapGenerator : MonoBehaviour
     public static int MostTop = int.MinValue;
     public static int MostBottom = int.MaxValue;
 
+    [SerializeReference]
+    public Tilemap MyTilemap;
+
     public static IReadOnlyList<Vector2Int> NegativeSpace { get; private set; } = new List<Vector2Int>();
 
     [SerializeReference]
     private MapGenerationPlan plan;
     [SerializeReference]
     private TDSCamera gameCamera;
+
 
     public static bool MapReady { get; private set; } = false;
 
@@ -32,8 +38,9 @@ public class MapGenerator : MonoBehaviour
 
     public async Task GenerateWorld()
     {
-        List<Vector2Int> negativeSpace = await this.plan.GenerateMapAsync();
+        List<Vector2Int> negativeSpace = await this.plan.GenerateMapAsync(this.transform, this.MyTilemap);
         NegativeSpace = negativeSpace;
+
         MapReady = true;
     }
 

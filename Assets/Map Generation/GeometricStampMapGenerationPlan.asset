@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GeometricStampMapGenerationPlan
   m_EditorClassIdentifier: 
   WallPF: {fileID: 6736155336947055435, guid: f2ef392171ac06243b92cea6680d0c81, type: 3}
+  WallTile: {fileID: 0}
   WallFillingBufferSize: 5
   MapWidthMin: 50
   MapWidthMax: 100
@@ -30,3 +31,4 @@ MonoBehaviour:
   CircleInnerStampRadiusMax: 5
   MinDistanceBetweenStamps: 4
   MaxDistanceBetweenStamps: 15
+  WallTilebase: {fileID: -6100500433400396510, guid: 3cf9627c17b1c7f4da6a2b29eed73d71, type: 3}

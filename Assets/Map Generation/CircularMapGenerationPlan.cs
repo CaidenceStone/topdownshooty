@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 [CreateAssetMenu(fileName = "MapGenerator", menuName = "Map Generation/Circular Map Generation Plan", order = 0)]
 public class CircularMapGenerationPlan : MapGenerationPlan
@@ -9,7 +10,7 @@ public class CircularMapGenerationPlan : MapGenerationPlan
     public int CircleRadius = 15;
     public int WallFillingBufferSize = 5;
 
-    public override async Task<List<Vector2Int>> GenerateMapAsync()
+    public override async Task<List<Vector2Int>> GenerateMapAsync(Transform root, Tilemap onMap)
     {
         List<Vector2Int> spawnPoints = new List<Vector2Int>();
         List<Vector2Int> emptySpace = new List<Vector2Int>();
@@ -32,7 +33,7 @@ public class CircularMapGenerationPlan : MapGenerationPlan
             }
         }
 
-        await this.SpawnPF(this.WallPF, spawnPoints);
+        await this.SpawnPF(this.WallPF, spawnPoints, root);
         return emptySpace;
     }
 }

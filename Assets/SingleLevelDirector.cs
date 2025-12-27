@@ -1,3 +1,4 @@
+using NavMeshPlus.Components;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -5,6 +6,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.InputSystem;
 using UnityEngine.TextCore.Text;
 
@@ -42,6 +44,7 @@ public class SingleLevelDirector : MonoBehaviour
     [SerializeReference]
     private DropManager dropManager;
 
+
     [SerializeReference]
     private EnemySpawnSettingsProvider enemySpawnSettingsProvider;
     private EnemySpawnSettings enemySpawnSettings { get; set; } = null;
@@ -78,12 +81,22 @@ public class SingleLevelDirector : MonoBehaviour
         this.enemySpawnSettings = this.enemySpawnSettingsProvider.GenerateEnemySpawnSettings();
         await this.mapGenerator.GenerateWorld();
 
+        StartCoroutine(FinishStartDelayed());
+    }
+
+    /// <summary>
+    /// Delay finishing the rest of the operation so that nav meshes can bake and such
+    /// </summary>
+    IEnumerator FinishStartDelayed()
+    {
+        yield return null;
+
         Vector2Int startPlayCirclePosition = MapGenerator.GetAnyRandomNegativeSpace();
         this.startPlayCircle.transform.position = (Vector2)(startPlayCirclePosition) / MapGenerator.COORDINATETOPOSITIONDIVISOR;
         this.gameplayCamera.SnapPosition(this.startPlayCircle.transform.position);
 
         this.PlayerStartingPosition = MapGenerator.GetRandomNegativeSpaceNearPoint(startPlayCirclePosition, this.minimumDistanceFromStartCircle, this.maximumDistanceFromStartCircle);
-    
+
         foreach (PlayerIdentity curIdentity in StaticLevelDirector.GetPlayerIdentities())
         {
             this.SpawnPlayer(curIdentity.Devices);

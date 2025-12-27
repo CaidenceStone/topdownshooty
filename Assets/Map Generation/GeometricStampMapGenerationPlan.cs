@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 [CreateAssetMenu(fileName = "MapGenerator", menuName = "Map Generation/Geometric Stamp Map Generation Plan", order = 1)]
 public class GeometricStampMapGenerationPlan : MapGenerationPlan
@@ -31,7 +32,9 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
     public float MinDistanceBetweenStamps = 4;
     public float MaxDistanceBetweenStamps = 8;
 
-    public override async Task<List<Vector2Int>> GenerateMapAsync()
+    public TileBase WallTilebase;
+
+    public override async Task<List<Vector2Int>> GenerateMapAsync(Transform root, Tilemap onMap)
     {
         List<Vector2Int> negativeSpace = new List<Vector2Int>();
         int chosenWidth = UnityEngine.Random.Range(this.MapWidthMin, this.MapWidthMax);
@@ -135,7 +138,8 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
             }
         }
 
-        await this.SpawnPF(this.WallPF, walls);
+        await this.WriteTilemap(onMap, walls, WallTilebase);
+        // await this.SpawnPF(this.WallPF, walls, root);
         return negativeSpace;
     }
 

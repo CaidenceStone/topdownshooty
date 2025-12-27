@@ -100,6 +100,7 @@ public class TDSCamera : MonoBehaviour
     }
     public void SnapPosition(Vector2 position)
     {
-        this.transform.position = position;
+        this.transform.position = (Vector3)position + Vector3.back * 10f;
+        this.curZoomLevel = this.MinimumZoomLevel;
     }
 }

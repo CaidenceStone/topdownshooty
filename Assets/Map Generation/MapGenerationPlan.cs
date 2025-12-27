@@ -11,7 +11,7 @@ public abstract class MapGenerationPlan : ScriptableObject
     public GameObject WallPF;
     public TileBase WallTile;
 
-    public abstract Task<List<Vector2Int>> GenerateMapAsync(Transform root, Tilemap onMap);
+    public abstract Task<List<SpatialCoordinate>> GenerateMapAsync(Transform root, Tilemap onMap);
 
     protected async Task SpawnPF(GameObject toSpawn, IEnumerable<Vector2Int> spawnPoints, Transform root)
     {
@@ -26,7 +26,7 @@ public abstract class MapGenerationPlan : ScriptableObject
         }
     }
 
-    protected async Task WriteTilemap(Tilemap toWriteOn, List<Vector2Int> positions, TileBase toPlace)
+    protected async Task WriteTilemap(Tilemap toWriteOn, HashSet<Vector2Int> positions, TileBase toPlace)
     {
         foreach (Vector2Int spawnPoint in positions)
         {
@@ -37,11 +37,13 @@ public abstract class MapGenerationPlan : ScriptableObject
         }
 
         int positionsCount = positions.Count;
+        List<Vector2Int> positionList = new List<Vector2Int>(positions);
         Vector3Int[] positionsList = new Vector3Int[positionsCount];
         TileBase[] tilesComparativeList = new TileBase[positionsCount];
+
         for (int ii = 0; ii < positionsCount; ii++)
         {
-            positionsList[ii] = (Vector3Int)positions[ii];
+            positionsList[ii] = (Vector3Int)positionList[ii];
             tilesComparativeList[ii] = toPlace;
         }
 

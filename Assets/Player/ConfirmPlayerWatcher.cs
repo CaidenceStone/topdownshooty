@@ -30,6 +30,7 @@ public class ConfirmPlayerWatcher : MonoBehaviour
         this.playerControls.Gameplay.Start.performed += OnStartPressed;
         this.playerControls.Gameplay.Reset.performed += OnResetPressed;
         this.playerControls.Gameplay.SkipLevel.performed += OnSkipPressed;
+        this.playerControls.Enable();
     }
 
     private void OnDisable()
@@ -37,6 +38,7 @@ public class ConfirmPlayerWatcher : MonoBehaviour
         this.playerControls.Gameplay.Start.performed -= OnStartPressed;
         this.playerControls.Gameplay.Reset.performed -= OnResetPressed;
         this.playerControls.Gameplay.SkipLevel.performed -= OnSkipPressed;
+        this.playerControls.Disable();
     }
 
     void OnStartPressed(InputAction.CallbackContext context)

@@ -44,7 +44,7 @@ public class PersonalHealthCanvas : MonoBehaviour
 
         foreach (TMP_Text text in this.textsToAlpha)
         {
-            text.text = currentInterpolatedValue.ToString("F2");
+            text.text = currentInterpolatedValue.ToString("F0");
         }
 
         this.UpdateAlpha();
@@ -73,7 +73,7 @@ public class PersonalHealthCanvas : MonoBehaviour
 
             foreach (TMP_Text text in this.textsToAlpha)
             {
-                text.text = this.currentInterpolatedValue.ToString("F2");
+                text.text = this.currentInterpolatedValue.ToString("F0");
             }
 
             this.UpdateAlpha();

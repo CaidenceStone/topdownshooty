@@ -625,6 +625,58 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 1237779637428638646, guid: 96449e5041b54b44b978571c5372d66f, type: 3}
   m_PrefabInstance: {fileID: 842401348}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &907602069
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 907602071}
+  - component: {fileID: 907602070}
+  m_Layer: 0
+  m_Name: SpatialReasoningCalculator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &907602070
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 907602069}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5dc27e14286e2d42a585c697e562049, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  environmentLayerMask:
+    serializedVersion: 2
+    m_Bits: 256
+  raycastAnglesToCheck:
+  - 0
+  - 90
+  - 180
+  - 270
+--- !u!4 &907602071
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 907602069}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &958192400 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6932541291921877611, guid: 96449e5041b54b44b978571c5372d66f, type: 3}
@@ -1999,3 +2051,4 @@ SceneRoots:
   - {fileID: 1117270868}
   - {fileID: 3725005177897138575}
   - {fileID: 3455995520779386032}
+  - {fileID: 907602071}

@@ -2,6 +2,7 @@ using NavMeshPlus.Components;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -18,7 +19,7 @@ public class MapGenerator : MonoBehaviour
     [SerializeReference]
     public Tilemap MyTilemap;
 
-    public static IReadOnlyList<Vector2Int> NegativeSpace { get; private set; } = new List<Vector2Int>();
+    public static IReadOnlyList<SpatialCoordinate> NegativeSpace { get; set; } = new List<SpatialCoordinate>();
 
     [SerializeReference]
     private MapGenerationPlan plan;
@@ -38,7 +39,7 @@ public class MapGenerator : MonoBehaviour
 
     public async Task GenerateWorld()
     {
-        List<Vector2Int> negativeSpace = await this.plan.GenerateMapAsync(this.transform, this.MyTilemap);
+        List<SpatialCoordinate> negativeSpace = await this.plan.GenerateMapAsync(this.transform, this.MyTilemap);
         NegativeSpace = negativeSpace;
 
         MapReady = true;
@@ -46,22 +47,46 @@ public class MapGenerator : MonoBehaviour
 
     public static Vector2Int GetAnyRandomNegativeSpace()
     {
-        return NegativeSpace[UnityEngine.Random.Range(0, NegativeSpace.Count)];
+        if (NegativeSpace.Count == 0)
+        {
+            Debug.Log($"There is no negative space to retrieve.");
+            return Vector2Int.zero;
+        }
+
+        return NegativeSpace[UnityEngine.Random.Range(0, NegativeSpace.Count - 1)].BasedOnPosition;
     }
 
-    public static Vector2Int GetRandomNegativeSpaceNearPoint(Vector2Int near, float minDistance, float maxDistance)
+    public static Vector2 GetRandomNegativeSpacePointAtDistanceRangeFromPoint(Vector2 near, float minDistance, float maxDistance)
     {
-        return GetNegativeSpaceFromSubset(near, NegativeSpace, minDistance, maxDistance);
+        return GetRandomNegativeSpacePointAtDistanceRangeFromPoint(near, NegativeSpace, minDistance, maxDistance);
     }
 
-    public static Vector2Int GetRandomNegativeSpaceAwayFromPoints(IReadOnlyList<Vector2> near, float minDistance, float maxDistance)
+    /*
+     * WARNING: There's a bunch of duplicated code below
+     * Still figuring out my footing on the arguments for some things
+     * so they're redundant and messy
+     * */
+
+    public static Vector2 GetRandomNegativeSpacePointAtDistanceRangeFromPoints(IReadOnlyList<Vector2> near, float minDistance, float maxDistance)
     {
+        if (near.Count == 0)
+        {
+            Debug.Log($"Asked to get a negative space away from nothing");
+            return Vector2Int.zero;
+        }
+
+        if (NegativeSpace.Count == 0)
+        {
+            Debug.Log($"There is no negative space.");
+            return Vector2Int.zero;
+        }
+
         Vector2Int randomSpace = Vector2Int.zero;
         for (int ii = 0; ii < GETRANDOMNEARBYMAXITERATIONS; ii++)
         {
             foreach (Vector2 nearPoint in near)
             {
-                randomSpace = NegativeSpace[UnityEngine.Random.Range(0, NegativeSpace.Count)];
+                randomSpace = NegativeSpace[UnityEngine.Random.Range(0, NegativeSpace.Count)].BasedOnPosition;
                 float distance = Vector2.Distance(randomSpace, nearPoint);
 
                 if (distance > minDistance && distance < maxDistance)
@@ -73,14 +98,83 @@ public class MapGenerator : MonoBehaviour
         return randomSpace;
     }
 
-    public static Vector2Int GetNegativeSpaceFromSubset(Vector2Int near, IReadOnlyList<Vector2Int> subset, float minDistance, float maxDistance)
+    public static Vector2Int GetRandomNegativeSpacePointAtDistanceRangeFromPoint(Vector2Int near, IReadOnlyList<Vector2Int> subset, float minDistance, float maxDistance)
     {
-        return GetNegativeSpaceFromSubset((Vector2)near, subset, minDistance, maxDistance);
+        if (subset.Count == 0)
+        {
+            Debug.Log("Asked to pick from an empty subset");
+            return default(Vector2Int);
+        }
+
+        Vector2Int randomSpace = Vector2Int.zero;
+        for (int ii = 0; ii < GETRANDOMNEARBYMAXITERATIONS; ii++)
+        {
+            int randomIndex = UnityEngine.Random.Range(0, subset.Count);
+            randomSpace = subset[randomIndex];
+            float distance = Vector2.Distance(randomSpace, near);
+
+            if (distance > minDistance && distance < maxDistance)
+            {
+                return randomSpace;
+            }
+        }
+        return randomSpace;
     }
 
-    public static Vector2Int GetNegativeSpaceFromSubset(Vector2 near, IReadOnlyList<Vector2Int> subset, float minDistance, float maxDistance)
+    public static Vector2Int GetRandomNegativeSpacePointAtDistanceRangeFromPoint(Vector2Int near, IReadOnlyList<SpatialCoordinate> subset, float minDistance, float maxDistance)
     {
+        if (subset.Count == 0)
+        {
+            Debug.Log("Asked to pick from an empty subset");
+            return default(Vector2Int);
+        }
+
         Vector2Int randomSpace = Vector2Int.zero;
+        for (int ii = 0; ii < GETRANDOMNEARBYMAXITERATIONS; ii++)
+        {
+            int randomIndex = UnityEngine.Random.Range(0, subset.Count);
+            randomSpace = subset[randomIndex].BasedOnPosition;
+            float distance = Vector2.Distance(randomSpace, near);
+
+            if (distance > minDistance && distance < maxDistance)
+            {
+                return randomSpace;
+            }
+        }
+        return randomSpace;
+    }
+
+    public static Vector2 GetRandomNegativeSpacePointAtDistanceRangeFromPoint(Vector2 near, IReadOnlyList<SpatialCoordinate> subset, float minDistance, float maxDistance)
+    {
+        if (subset.Count == 0)
+        {
+            Debug.Log("Asked to pick from an empty subset");
+            return default(Vector2);
+        }
+
+        Vector2 randomSpace = Vector2.zero;
+        for (int ii = 0; ii < GETRANDOMNEARBYMAXITERATIONS; ii++)
+        {
+            randomSpace = subset[UnityEngine.Random.Range(0, subset.Count)].BasedOnPosition;
+            float distance = Vector2.Distance(randomSpace, near);
+
+            if (distance > minDistance && distance < maxDistance)
+            {
+                return randomSpace;
+            }
+        }
+        return randomSpace;
+    }
+
+    public static Vector2 GetNegativeSpaceFromReasonableDistanceFromSubset(Vector2 near, IReadOnlyList<Vector2> subset, float minDistance, float maxDistance)
+    {
+        if (subset.Count == 0)
+        {
+            Debug.Log("Asked to pick from an empty subset");
+            return default(Vector2);
+        }
+
+        Vector2 randomSpace = Vector2.zero;
         for (int ii = 0; ii < GETRANDOMNEARBYMAXITERATIONS; ii++)
         {
             randomSpace = subset[UnityEngine.Random.Range(0, subset.Count)];

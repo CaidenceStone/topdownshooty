@@ -6,7 +6,6 @@ using UnityEngine;
 
 public class Enemy : Entity
 {
-    protected Vector2 movingTowards { get; set; }
     [SerializeField]
     private float movementSpeedPerSecond = 5f;
 
@@ -30,10 +29,10 @@ public class Enemy : Entity
     private float maxDesiredDistanceFromPlayer = 10f;
 
     protected Entity primaryTarget { get; set; }
+    protected Path currentPath { get; set; } = null;
 
     protected override void Start()
     {
-        this.movingTowards = this.Body.position;
         base.Start();
     }
 
@@ -46,9 +45,11 @@ public class Enemy : Entity
             return;
         }
 
-        Vector2 distanceBetweenPoints = movingTowards - Body.position;
-        Vector2 distanceToMove = Vector2.ClampMagnitude(distanceBetweenPoints, Time.deltaTime * this.movementSpeedPerSecond);
-        this.MoveEntity(distanceToMove);
+        if (this.currentPath != null && !this.currentPath.IsComplete)
+        {
+            Vector2 destination = this.currentPath.ApproachWaypointByDistance(this.Body.position, this.movementSpeedPerSecond * Time.deltaTime, out float remainingDistance);
+            this.MoveEntity(destination - this.Body.position);
+        }
     }
 
     protected override void Rethink()
@@ -70,7 +71,6 @@ public class Enemy : Entity
             if (!closestDistance.HasValue || distanceToPoint < closestDistance.Value)
             {
                 closestDistance = distanceToPoint;
-                this.movingTowards = controller.Body.position;
                 closestCharacter = controller;
             }
         }
@@ -93,14 +93,22 @@ public class Enemy : Entity
         float randomDesiredDistance = Random.Range(this.minDesiredDistanceFromPlayer, this.maxDesiredDistanceFromPlayer);
 
         // Take the player's position, and imagine a point that random distance away towards the enemy's position
-        this.movingTowards = playerPosition - differenceInPosition * randomDesiredDistance;
+        this.currentPath = SpatialReasoningCalculator.CurrentInstance.GetPath(this.Body.position, playerPosition);
+        if (this.currentPath == null)
+        {
+            this.currentPath = null;
+            Debug.Log($"I couldn't find a path from {this.Body.position} to {playerPosition}");
+            return;
+        }
+
+        // Debug.Log($"I made a path going from {this.Body.position} to {playerPosition} that is {this.currentPath.PathPointsCount} path points");
     }
 
     protected virtual void OnDrawGizmos()
     {
-        if (primaryTarget != null)
+        if (primaryTarget != null && this.currentPath != null && !this.currentPath.IsComplete)
         {
-            Debug.DrawLine(this.Body.position, this.movingTowards, Color.green);
+            Debug.DrawLine(this.Body.position, this.currentPath.Destination, Color.green);
         }
     }
 }

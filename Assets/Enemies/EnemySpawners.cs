@@ -36,7 +36,7 @@ public class EnemySpawners : MonoBehaviour
 
         this.curSecondsBetweenEnemySpawns = this.secondsBetweenEnemySpawns;
 
-        Vector2 positionToSpawn = MapGenerator.GetRandomNegativeSpaceAwayFromPoints(StaticLevelDirector.CurrentLevelDirector.GetCharacterPositions(), distanceToSpawnEnemyAt, float.MaxValue);
+        Vector2 positionToSpawn = MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoints(StaticLevelDirector.CurrentLevelDirector.GetCharacterPositions(), distanceToSpawnEnemyAt, float.MaxValue);
         Enemy newEnemy = Instantiate(this.enemyPF, this.transform);
         newEnemy.transform.position = positionToSpawn;
     }

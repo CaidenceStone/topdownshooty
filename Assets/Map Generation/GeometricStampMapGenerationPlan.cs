@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -32,15 +34,17 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
     public float MinDistanceBetweenStamps = 4;
     public float MaxDistanceBetweenStamps = 8;
 
+    public float MinimumWallProximity = 3;
+
     public TileBase WallTilebase;
 
-    public override async Task<List<Vector2Int>> GenerateMapAsync(Transform root, Tilemap onMap)
+    public override async Task<List<SpatialCoordinate>> GenerateMapAsync(Transform root, Tilemap onMap)
     {
-        List<Vector2Int> negativeSpace = new List<Vector2Int>();
+        HashSet<Vector2Int> negativeSpace = new HashSet<Vector2Int>();
         int chosenWidth = UnityEngine.Random.Range(this.MapWidthMin, this.MapWidthMax);
         int chosenHeight = UnityEngine.Random.Range(this.MapHeightMin, this.MapHeightMax);
 
-        List<Vector2Int> walls = new List<Vector2Int>((chosenWidth + ExtraWallBuffer * 2) * (chosenHeight + ExtraWallBuffer * 2));
+        HashSet<Vector2Int> walls = new HashSet<Vector2Int>((chosenWidth + ExtraWallBuffer * 2) * (chosenHeight + ExtraWallBuffer * 2));
         List<Vector2Int> moldableWalls = new List<Vector2Int>(chosenWidth * chosenHeight);
         int currentIndex = 0;
 
@@ -99,7 +103,6 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
                 foreach (Vector2Int wallToRetain in wallsToRetain)
                 {
                     wallsToRemove.Remove(wallToRetain);
-                    moldableWalls.Add(wallToRetain);
                 }
             }
 
@@ -127,20 +130,45 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
             connectionPoints.Add(previousConnectionPoint.Value);
         }
 
-        for (int ii = 1; ii < connectionPoints.Count; ii++)
+        if (connectionPoints.Count >= 2)
         {
-            IReadOnlyList<Vector2Int> wallsToRemove = this.DrawLineBetween(connectionPoints[ii - 1], connectionPoints[ii], moldableWalls);
-            foreach (Vector2Int wallToRemove in wallsToRemove)
+            Debug.Log($"Connecting the maps of {connectionPoints.Count} connection points");
+            for (int ii = 1; ii < connectionPoints.Count; ii++)
             {
-                walls.Remove(wallToRemove);
-                moldableWalls.Remove(wallToRemove);
-                negativeSpace.Add(wallToRemove);
+                IReadOnlyList<Vector2Int> wallsToRemove = await this.DrawLineBetweenAsync(connectionPoints[ii - 1], connectionPoints[ii], moldableWalls);
+                foreach (Vector2Int wallToRemove in wallsToRemove)
+                {
+                    walls.Remove(wallToRemove);
+                    moldableWalls.Remove(wallToRemove);
+                    negativeSpace.Add(wallToRemove);
+                }
             }
+        }
+        
+
+        // Finally, we need to eliminate "islands"
+        // It is likely that there will be spaces that aren't connected to any other open space
+        // Find the largest island, and turn the rest in to walls
+
+        // Temporarily set the negative space so that connections can be built
+        Debug.Log($"Setting negative space to {negativeSpace.Count} tiles and baking spatial reasoning calculator");
+        MapGenerator.NegativeSpace = await SpatialReasoningCalculator.CurrentInstance.BakeWithAsync(negativeSpace);
+
+        List<SpatialCoordinate> wallsToRefill = new List<SpatialCoordinate>();
+        Debug.Log($"Finding largest island out of {MapGenerator.NegativeSpace.Count}");
+        List<SpatialCoordinate> largestIsland = SpatialReasoningCalculator.FindLargestIsland(MapGenerator.NegativeSpace, out wallsToRefill, MinimumWallProximity);
+
+        Debug.Log($"Limiting negative space to {largestIsland.Count}");
+        SpatialReasoningCalculator.CurrentInstance.LimitTo((largestIsland).ToHashSet());
+
+        foreach (SpatialCoordinate refillWalls in wallsToRefill)
+        {
+            walls.Add(refillWalls.BasedOnPosition);
         }
 
         await this.WriteTilemap(onMap, walls, WallTilebase);
         // await this.SpawnPF(this.WallPF, walls, root);
-        return negativeSpace;
+        return largestIsland;
     }
 
     protected virtual IReadOnlyList<Vector2Int> StampCircle(IReadOnlyList<Vector2Int> coordinates, out Vector2Int center, float radius, Vector2Int? previousLinkPosition, float minDistance, float maxDistance)
@@ -155,7 +183,7 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
 
         if (previousLinkPosition.HasValue)
         {
-            center = MapGenerator.GetNegativeSpaceFromSubset(previousLinkPosition.Value, coordinates, minDistance, maxDistance);
+            center = MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoint(previousLinkPosition.Value, coordinates, minDistance, maxDistance);
         }
         else
         {
@@ -184,16 +212,7 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
         for (int ii = 0, coordinateLength = coordinates.Count; ii < coordinateLength; ii++)
         {
             Vector2Int currentPosition = coordinates[ii];
-            Vector2 differenceFromLine = currentPosition - pointA;
-            float t = Vector2.Dot(differenceFromLine, lineDirection);
-
-            if (t < 0 || t > differenceFromLine.magnitude)
-            {
-                continue;
-            }
-
-            Vector2 closestPointOnLine = pointA + lineDirection * t;
-            float distance = Vector2.Distance(currentPosition, closestPointOnLine);
+            float distance = SpatialReasoningCalculator.GetClosestDistanceFromLineSegment(currentPosition, pointA, pointB);
 
             if (distance < lineThickness)
             {
@@ -202,5 +221,41 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
         }
 
         return removeWalls;
+    }
+
+    protected virtual async Task<IReadOnlyList<Vector2Int>> DrawLineBetweenAsync(Vector2Int pointA, Vector2Int pointB, IReadOnlyList<Vector2Int> coordinates, Vector2? lineDirection = null)
+    {
+        ConcurrentBag<Vector2Int> removeWalls = new ConcurrentBag<Vector2Int>();
+        float lineThickness = UnityEngine.Random.Range(LineThicknessMin, LineThicknessMax);
+        if (!lineDirection.HasValue)
+        {
+            lineDirection = ((Vector2)(pointB - pointA)).normalized;
+        }
+
+        int coordinatesCount = coordinates.Count;
+        Task[] selectionTasks = new Task[coordinatesCount];
+
+        Debug.Log($"Drawing a line from {pointA} to {pointB} across {coordinatesCount} coordinates");
+
+        for (int ii = 0; ii < coordinatesCount; ii++)
+        {
+            int thisIndex = ii;
+            selectionTasks[thisIndex] = Task.Run(() => 
+            {
+                Vector2Int currentPosition = coordinates[thisIndex];
+                float distance = SpatialReasoningCalculator.GetClosestDistanceFromLineSegment(currentPosition, pointA, pointB, lineDirection);
+
+                if (distance < lineThickness)
+                {
+                    removeWalls.Add(currentPosition);
+                }
+            });
+        }
+
+        await Task.WhenAll(selectionTasks);
+
+        Debug.Log($"Drawing a line in the subset of coordinates between {pointA} and {pointB} results in selecting {removeWalls.Count}.");
+
+        return removeWalls.ToArray();
     }
 }

@@ -25,7 +25,7 @@ public class SingleLevelDirector : MonoBehaviour
     [SerializeReference]
     private PlayerHUDManager hudManager;
 
-    public Vector2Int PlayerStartingPosition { get; private set; }
+    public Vector2 PlayerStartingPosition { get; private set; }
 
     [SerializeField]
     private float minimumDistanceFromStartCircle = 3;
@@ -79,6 +79,8 @@ public class SingleLevelDirector : MonoBehaviour
     private async void Start()
     {
         this.enemySpawnSettings = this.enemySpawnSettingsProvider.GenerateEnemySpawnSettings();
+
+        await Awaitable.NextFrameAsync();
         await this.mapGenerator.GenerateWorld();
 
         StartCoroutine(FinishStartDelayed());
@@ -89,13 +91,18 @@ public class SingleLevelDirector : MonoBehaviour
     /// </summary>
     IEnumerator FinishStartDelayed()
     {
+        while (!MapGenerator.MapReady)
+        {
+            yield return null;
+        }
+
         yield return null;
 
         Vector2Int startPlayCirclePosition = MapGenerator.GetAnyRandomNegativeSpace();
         this.startPlayCircle.transform.position = (Vector2)(startPlayCirclePosition) / MapGenerator.COORDINATETOPOSITIONDIVISOR;
         this.gameplayCamera.SnapPosition(this.startPlayCircle.transform.position);
 
-        this.PlayerStartingPosition = MapGenerator.GetRandomNegativeSpaceNearPoint(startPlayCirclePosition, this.minimumDistanceFromStartCircle, this.maximumDistanceFromStartCircle);
+        this.PlayerStartingPosition = MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoint(startPlayCirclePosition, this.minimumDistanceFromStartCircle, this.maximumDistanceFromStartCircle);
 
         foreach (PlayerIdentity curIdentity in StaticLevelDirector.GetPlayerIdentities())
         {
@@ -131,7 +138,7 @@ public class SingleLevelDirector : MonoBehaviour
             newIdentity.WeaponData = newController.OwnWeaponCollection.Data;
         }
 
-        this.PlayerStartingPosition = MapGenerator.GetRandomNegativeSpaceNearPoint
+        this.PlayerStartingPosition = MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoint
             (this.PlayerStartingPosition, this.minimumDistanceFromStartCircle, this.maximumDistanceFromStartCircle);
         newController.Body.position = (Vector2)this.PlayerStartingPosition / MapGenerator.COORDINATETOPOSITIONDIVISOR;
 
@@ -151,7 +158,7 @@ public class SingleLevelDirector : MonoBehaviour
                 Debug.Log($"No more spawn tickets are active");
                 break;
             }
-            Vector2 positionToSpawn = (Vector2)MapGenerator.GetRandomNegativeSpaceAwayFromPoints(currentCharacterPositions, this.minimumEnemySpawnStartDistance, float.MaxValue) / MapGenerator.COORDINATETOPOSITIONDIVISOR;
+            Vector2 positionToSpawn = (Vector2)MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoints(currentCharacterPositions, this.minimumEnemySpawnStartDistance, float.MaxValue) / MapGenerator.COORDINATETOPOSITIONDIVISOR;
             Entity newEntity = Instantiate(entityPF, this.transform);
             newEntity.transform.position = positionToSpawn;
         }
@@ -160,7 +167,7 @@ public class SingleLevelDirector : MonoBehaviour
         Debug.Log($"Spawning {weaponDropCount} initial weapon drops");
         for (int ii = 0; ii < weaponDropCount; ii++)
         {
-            Vector2 positionToSpawn = (Vector2)MapGenerator.GetRandomNegativeSpaceAwayFromPoints(currentCharacterPositions, this.minimumDistanceFromStartCircle, float.MaxValue) / MapGenerator.COORDINATETOPOSITIONDIVISOR;
+            Vector2 positionToSpawn = (Vector2)MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoints(currentCharacterPositions, this.minimumDistanceFromStartCircle, float.MaxValue) / MapGenerator.COORDINATETOPOSITIONDIVISOR;
             this.dropManager.DoDropWeapon(positionToSpawn);
         }
 
@@ -217,7 +224,7 @@ public class SingleLevelDirector : MonoBehaviour
         Debug.Log($"Spawn the next level portal!");
 
         Vector2 playerPosition = this.alivePlayers[UnityEngine.Random.Range(0, this.alivePlayers.Count)].Body.position;
-        Vector2 warpPosition = MapGenerator.GetRandomNegativeSpaceNearPoint(new Vector2Int
+        Vector2 warpPosition = MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoint(new Vector2Int
             (
                 Mathf.RoundToInt(playerPosition.x * MapGenerator.COORDINATETOPOSITIONDIVISOR), 
                 Mathf.RoundToInt(playerPosition.y * MapGenerator.COORDINATETOPOSITIONDIVISOR)

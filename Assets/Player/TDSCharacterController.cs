@@ -187,11 +187,13 @@ public class TDSCharacterController : Entity
 
     private void OnEnable()
     {
+        this.playerControls?.Enable();
         TDSCamera.RegisterFollowing(this);
     }
 
     private void OnDisable()
     {
+        this.playerControls?.Disable();
         TDSCamera.UnregisterFollowing(this);
     }
 

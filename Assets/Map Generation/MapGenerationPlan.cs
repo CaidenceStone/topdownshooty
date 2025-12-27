@@ -20,7 +20,7 @@ public abstract class MapGenerationPlan : ScriptableObject
             MapGenerator.MostTop = Mathf.Max(MapGenerator.MostTop, spawnPoint.y);
             MapGenerator.MostRight = Mathf.Max(MapGenerator.MostRight, spawnPoint.x);
 
-            Instantiate(toSpawn, new Vector2(spawnPoint.x, spawnPoint.y), Quaternion.identity);
+            Instantiate(toSpawn, new Vector2(spawnPoint.x, spawnPoint.y) / MapGenerator.COORDINATETOPOSITIONDIVISOR, Quaternion.identity);
         }
     }
 }

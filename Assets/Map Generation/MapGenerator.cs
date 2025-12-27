@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class MapGenerator : MonoBehaviour
 {
+    public const float COORDINATETOPOSITIONDIVISOR = 2f;
     const int GETRANDOMNEARBYMAXITERATIONS = 1000;
 
     public static int MostLeft = int.MaxValue;

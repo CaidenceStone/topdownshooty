@@ -55,7 +55,7 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
                     }
 
                     int previousIndex = currentIndex;
-                    int nextIndex =System.Threading.Interlocked.Increment(ref currentIndex);
+                    int nextIndex = System.Threading.Interlocked.Increment(ref currentIndex);
                     walls.Add(thisCoordinate);
                 }
             }

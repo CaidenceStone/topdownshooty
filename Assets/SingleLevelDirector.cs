@@ -79,7 +79,7 @@ public class SingleLevelDirector : MonoBehaviour
         await this.mapGenerator.GenerateWorld();
 
         Vector2Int startPlayCirclePosition = MapGenerator.GetAnyRandomNegativeSpace();
-        this.startPlayCircle.transform.position = (Vector2)startPlayCirclePosition;
+        this.startPlayCircle.transform.position = (Vector2)(startPlayCirclePosition) / MapGenerator.COORDINATETOPOSITIONDIVISOR;
         this.gameplayCamera.SnapPosition(this.startPlayCircle.transform.position);
 
         this.PlayerStartingPosition = MapGenerator.GetRandomNegativeSpaceNearPoint(startPlayCirclePosition, this.minimumDistanceFromStartCircle, this.maximumDistanceFromStartCircle);
@@ -118,9 +118,9 @@ public class SingleLevelDirector : MonoBehaviour
             newIdentity.WeaponData = newController.OwnWeaponCollection.Data;
         }
 
-        this.PlayerStartingPosition = MapGenerator.GetRandomNegativeSpaceNearPoint(this.PlayerStartingPosition, this.minimumDistanceFromStartCircle, this.maximumDistanceFromStartCircle);
-        Vector2Int spawnPositionBasedOn = this.PlayerStartingPosition;
-        newController.Body.position = this.PlayerStartingPosition;
+        this.PlayerStartingPosition = MapGenerator.GetRandomNegativeSpaceNearPoint
+            (this.PlayerStartingPosition, this.minimumDistanceFromStartCircle, this.maximumDistanceFromStartCircle);
+        newController.Body.position = (Vector2)this.PlayerStartingPosition / MapGenerator.COORDINATETOPOSITIONDIVISOR;
 
         newController.SetDevices(fromDevices);
         this.hudManager.TryRegisterCanvas(newController, out _);
@@ -138,7 +138,7 @@ public class SingleLevelDirector : MonoBehaviour
                 Debug.Log($"No more spawn tickets are active");
                 break;
             }
-            Vector2 positionToSpawn = MapGenerator.GetRandomNegativeSpaceAwayFromPoints(currentCharacterPositions, this.minimumEnemySpawnStartDistance, float.MaxValue);
+            Vector2 positionToSpawn = (Vector2)MapGenerator.GetRandomNegativeSpaceAwayFromPoints(currentCharacterPositions, this.minimumEnemySpawnStartDistance, float.MaxValue) / MapGenerator.COORDINATETOPOSITIONDIVISOR;
             Entity newEntity = Instantiate(entityPF, this.transform);
             newEntity.transform.position = positionToSpawn;
         }
@@ -147,7 +147,7 @@ public class SingleLevelDirector : MonoBehaviour
         Debug.Log($"Spawning {weaponDropCount} initial weapon drops");
         for (int ii = 0; ii < weaponDropCount; ii++)
         {
-            Vector2 positionToSpawn = MapGenerator.GetRandomNegativeSpaceAwayFromPoints(currentCharacterPositions, this.minimumDistanceFromStartCircle, float.MaxValue);
+            Vector2 positionToSpawn = (Vector2)MapGenerator.GetRandomNegativeSpaceAwayFromPoints(currentCharacterPositions, this.minimumDistanceFromStartCircle, float.MaxValue) / MapGenerator.COORDINATETOPOSITIONDIVISOR;
             this.dropManager.DoDropWeapon(positionToSpawn);
         }
 
@@ -204,7 +204,13 @@ public class SingleLevelDirector : MonoBehaviour
         Debug.Log($"Spawn the next level portal!");
 
         Vector2 playerPosition = this.alivePlayers[UnityEngine.Random.Range(0, this.alivePlayers.Count)].Body.position;
-        Vector2 warpPosition = MapGenerator.GetRandomNegativeSpaceNearPoint(new Vector2Int(Mathf.RoundToInt(playerPosition.x), Mathf.RoundToInt(playerPosition.y)), this.minimumDistanceFromStartCircle, this.maximumDistanceFromStartCircle);
+        Vector2 warpPosition = MapGenerator.GetRandomNegativeSpaceNearPoint(new Vector2Int
+            (
+                Mathf.RoundToInt(playerPosition.x * MapGenerator.COORDINATETOPOSITIONDIVISOR), 
+                Mathf.RoundToInt(playerPosition.y * MapGenerator.COORDINATETOPOSITIONDIVISOR)
+            ),
+            this.minimumDistanceFromStartCircle,
+            this.maximumDistanceFromStartCircle);
         this.nextLevelEventCircle.transform.position = warpPosition;
         this.nextLevelEventCircle.gameObject.SetActive(true);
     }

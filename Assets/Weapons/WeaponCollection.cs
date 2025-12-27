@@ -57,6 +57,7 @@ public class WeaponCollection : MonoBehaviour
             newWeapon.SetIsInWorld(false);
             this.Weapons.Add(newWeapon);
             newWeapon.gameObject.SetActive(true);
+            curWeapon.TimeBetweenShots = Mathf.Lerp(curWeapon.TimeBetweenShots, 0, owningEntity.Modifiers.ReloadSpeedPercentageReductionModifier);
         }
     }
 
@@ -123,6 +124,7 @@ public class WeaponCollection : MonoBehaviour
         toAdd.transform.SetParent(this.transform, false);
         toAdd.transform.localPosition = Vector3.zero;
         toAdd.InitializeWeapon(this.entity.MyFaction);
+        toAdd.TimeBetweenShots = Mathf.Lerp(toAdd.TimeBetweenShots, 0, this.entity.Modifiers.ReloadSpeedPercentageReductionModifier);
         this.OnChangedToWeapon?.Invoke(this.GetCurrentWeapon());
     }
 }

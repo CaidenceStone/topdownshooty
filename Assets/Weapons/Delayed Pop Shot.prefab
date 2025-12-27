@@ -312,7 +312,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   subProjectile: {fileID: 8442961825726286169, guid: c7adb3621e9be854aa6131cdf97e7b18, type: 3}
   subProjectileMinimumMovementSpeed: 10
-  subProjectileMaximumMovementSpeed: 20
-  timeBetweenFiring: 1
+  subProjectileMaximumMovementSpeed: 14
+  timeBetweenFiring: 0.6
   subProjectilesToFire: 50
   dieAfterFiring: 1

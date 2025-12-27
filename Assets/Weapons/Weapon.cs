@@ -7,9 +7,9 @@ public class Weapon : MonoBehaviour, IPickup
     [SerializeField]
     public string WeaponName;
     [SerializeField]
-    private float timeBetweenShots = .5f;
+    public float TimeBetweenShots = .5f;
     [SerializeField]
-    private float maximumAdditionalRandomTimeBetweenShots = 0;
+    public float MaximumAdditionalRandomTimeBetweenShots = 0;
     private float curTimeBetweenShots { get; set; } = 0f;
     [SerializeReference]
     private Projectile projectilePF;
@@ -43,7 +43,7 @@ public class Weapon : MonoBehaviour, IPickup
 
     private void Start()
     {
-        this.curTimeBetweenShots = Random.Range(this.timeBetweenShots, this.timeBetweenShots + this.randomStartSleepTimeModifierMax);
+        this.curTimeBetweenShots = Random.Range(this.TimeBetweenShots, this.TimeBetweenShots + this.randomStartSleepTimeModifierMax);
     }
 
     public bool ReadyToFire
@@ -66,7 +66,7 @@ public class Weapon : MonoBehaviour, IPickup
             return;
         }
 
-        this.curTimeBetweenShots = this.timeBetweenShots + Random.Range(0, maximumAdditionalRandomTimeBetweenShots);
+        this.curTimeBetweenShots = this.TimeBetweenShots + Random.Range(0, MaximumAdditionalRandomTimeBetweenShots);
         int randomNumberOfBullets = Random.Range(this.minimumBullets, this.maximumBullets);
         for (int ii = 0; ii < randomNumberOfBullets; ii ++)
         {

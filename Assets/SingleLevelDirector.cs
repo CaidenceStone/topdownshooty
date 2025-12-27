@@ -30,8 +30,6 @@ public class SingleLevelDirector : MonoBehaviour
     [SerializeField]
     private float maximumDistanceFromStartCircle = 10;
 
-    [SerializeReference]
-    private Enemy enemyPF;
     [SerializeField]
     private float minimumEnemySpawnStartDistance = 20;
 
@@ -43,6 +41,10 @@ public class SingleLevelDirector : MonoBehaviour
     private float minWeaponDropStartDistance = 5f;
     [SerializeReference]
     private DropManager dropManager;
+
+    [SerializeReference]
+    private EnemySpawnSettingsProvider enemySpawnSettingsProvider;
+    private EnemySpawnSettings enemySpawnSettings { get; set; } = null;
 
     public IReadOnlyList<TDSCharacterController> AlivePlayers
     {
@@ -61,9 +63,6 @@ public class SingleLevelDirector : MonoBehaviour
     }
     private List<Entity> aliveOtherEntities { get; set; } = new List<Entity>();
 
-    [SerializeField]
-    private int EnemyCountToSpawn = 30;
-
     public delegate void CountUpdatedDelegate(int newCount);
     public event CountUpdatedDelegate OnEnemyCountUpdated;
     public delegate void EntityEventDelegate(Entity forEntity);
@@ -76,6 +75,7 @@ public class SingleLevelDirector : MonoBehaviour
 
     private async void Start()
     {
+        this.enemySpawnSettings = this.enemySpawnSettingsProvider.GenerateEnemySpawnSettings();
         await this.mapGenerator.GenerateWorld();
 
         Vector2Int startPlayCirclePosition = MapGenerator.GetAnyRandomNegativeSpace();
@@ -130,11 +130,17 @@ public class SingleLevelDirector : MonoBehaviour
     {
         IReadOnlyList<Vector2> currentCharacterPositions = StaticLevelDirector.CurrentLevelDirector.GetCharacterPositions();
 
-        for (int ii = 0; ii < this.EnemyCountToSpawn; ii++)
+        Debug.Log($"Spawning {this.enemySpawnSettings.EnemyCountToSpawn} enemies");
+        for (int ii = 0; ii < this.enemySpawnSettings.EnemyCountToSpawn; ii++)
         {
+            if (!this.enemySpawnSettings.TryGetEntityAndTakeTicket(out Entity entityPF))
+            {
+                Debug.Log($"No more spawn tickets are active");
+                break;
+            }
             Vector2 positionToSpawn = MapGenerator.GetRandomNegativeSpaceAwayFromPoints(currentCharacterPositions, this.minimumEnemySpawnStartDistance, float.MaxValue);
-            Enemy newEnemy = Instantiate(this.enemyPF, this.transform);
-            newEnemy.transform.position = positionToSpawn;
+            Entity newEntity = Instantiate(entityPF, this.transform);
+            newEntity.transform.position = positionToSpawn;
         }
 
         int weaponDropCount = Random.Range(this.minWeaponDropsToStart, this.maxWeaponDropsToStart);
@@ -201,5 +207,10 @@ public class SingleLevelDirector : MonoBehaviour
         Vector2 warpPosition = MapGenerator.GetRandomNegativeSpaceNearPoint(new Vector2Int(Mathf.RoundToInt(playerPosition.x), Mathf.RoundToInt(playerPosition.y)), this.minimumDistanceFromStartCircle, this.maximumDistanceFromStartCircle);
         this.nextLevelEventCircle.transform.position = warpPosition;
         this.nextLevelEventCircle.gameObject.SetActive(true);
+    }
+
+    public void GoNextLevel()
+    {
+        StaticLevelDirector.AdvanceLevel();
     }
 }

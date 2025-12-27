@@ -17,6 +17,7 @@ public class ProjectileShootingEnemy : Enemy
 
     protected override void Start()
     {
+        this.ownWeapon.TimeBetweenShots = Mathf.Lerp(this.ownWeapon.TimeBetweenShots, 0, this.Modifiers.ReloadSpeedPercentageReductionModifier);
         base.Start();
         this.ownWeapon.InitializeWeapon(this.MyFaction);
     }

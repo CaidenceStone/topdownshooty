@@ -38,6 +38,8 @@ public class TDSCharacterController : Entity
     public WeaponCollection OwnWeaponCollection;
     [SerializeField]
     private LayerMask pickupLayerMask;
+    [SerializeField]
+    private LayerMask enemyHurtBoxMask;
 
     protected override void Start()
     {
@@ -180,6 +182,7 @@ public class TDSCharacterController : Entity
     protected override void HandleDestroy()
     {
         this.ForIdentity.CurrentController = null;
+        this.ownPersonalHealthCanvas?.Clear();
     }
 
     private void OnEnable()
@@ -192,8 +195,9 @@ public class TDSCharacterController : Entity
         TDSCamera.UnregisterFollowing(this);
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    protected override void OnCollisionEnter2D(Collision2D collision)
     {
+        base.OnCollisionEnter2D(collision);
         if ((this.pickupLayerMask & (1 << collision.gameObject.layer)) != 0)
         {
             IPickup pickup = collision.gameObject.GetComponentInParent<IPickup>();
@@ -201,6 +205,18 @@ public class TDSCharacterController : Entity
             if (pickup != null)
             {
                 this.HandlePickup(pickup);
+            }
+
+            return;
+        }
+
+        if ((this.enemyHurtBoxMask & (1 << collision.gameObject.layer)) != 0)
+        {
+            EnemyHurtBox hurtbox = collision.gameObject.GetComponentInParent<EnemyHurtBox>();
+
+            if (hurtbox != null)
+            {
+                this.ProcessHurtbox(hurtbox);
             }
 
             return;

@@ -8,6 +8,7 @@ using UnityEngine.Assertions.Must;
 
 public class Entity : MonoBehaviour
 {
+    public const float TIMETOIGNORECOLLIDERSAFTERHURTBOX = .2f;
     public const int MAXIMUMSLIDEITERATIONS = 10;
     public const float PLANCKCOLLISIONDISTANCE = .01f;
 
@@ -19,6 +20,8 @@ public class Entity : MonoBehaviour
     protected LayerMask environmentMask;
     [SerializeField]
     public double MaximumHP = 5.0;
+    [SerializeField]
+    protected PersonalHealthCanvas ownPersonalHealthCanvas = null;
     public double CurrentHP { get; protected set; }
 
     [SerializeField]
@@ -39,10 +42,15 @@ public class Entity : MonoBehaviour
     private readonly List<ImpactEvent> processingImpactEvents = new List<ImpactEvent>();
 
     private float? curHitStunTime { get; set; } = 0;
+    [SerializeField]
+    private float secondsToShowHealthCanvasOnDamage = .25f;
 
     [SerializeReference]
     private float timeBetweenRethinks;
     private float curTimeBetweenRethinks { get; set; } = 0;
+
+    public EntityModifier Modifiers { get; set; } = new EntityModifier();
+    protected List<CollisionIgnorance> collisionIgnorances { get; set; } = new List<CollisionIgnorance>();
 
     public bool IsInHitStun
     {
@@ -59,8 +67,20 @@ public class Entity : MonoBehaviour
 
     protected virtual void Start()
     {
-        this.CurrentHP = this.MaximumHP;
+        this.CurrentHP = this.MaximumHP + this.Modifiers.MaximumHealthFlatAdditionModifier;
         this.HealthChanged?.Invoke(this.CurrentHP, this.MaximumHP, this.MaximumHP);
+
+        if (this.ownPersonalHealthCanvas != null)
+        {
+            // TODO
+            // We might want to do something with that here...
+        }
+
+        if (this.ownPersonalHealthCanvas != null)
+        {
+            this.ownPersonalHealthCanvas.Clear();
+        }
+
         StaticLevelDirector.CurrentLevelDirector.RegisterEntity(this);
     }
 
@@ -103,13 +123,24 @@ public class Entity : MonoBehaviour
     protected virtual void TickDownTimers()
     {
         this.curTimeBetweenRethinks -= Time.deltaTime;
+
+        for (int ii = this.collisionIgnorances.Count - 1; ii >= 0; ii--)
+        {
+            CollisionIgnorance thisIgnorance = this.collisionIgnorances[ii];
+            thisIgnorance.SecondsLeft -= Time.deltaTime;
+            if (thisIgnorance.SecondsLeft <= 0)
+            {
+                thisIgnorance.Remove();
+                this.collisionIgnorances.RemoveAt(ii);
+            }
+        }
     }
 
     protected virtual void BehaviourUpdate()
     {
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    protected virtual void OnCollisionEnter2D(Collision2D collision)
     {
         if ((this.projectileMask & (1 << collision.gameObject.layer)) != 0)
         {
@@ -143,6 +174,7 @@ public class Entity : MonoBehaviour
     public virtual void MarkForDestruction()
     {
         this.ShouldDestroy = true;
+        this.ownPersonalHealthCanvas.Clear();
     }
 
     public void TakeDamage(double damageAmount)
@@ -156,6 +188,7 @@ public class Entity : MonoBehaviour
         }
         else
         {
+            this.ownPersonalHealthCanvas?.Show(this.CurrentHP, this.MaximumHP, this.secondsToShowHealthCanvasOnDamage);
             if (this.curDamageFlickerCoroutine != null)
             {
                 this.StopCoroutine(this.curDamageFlickerCoroutine);
@@ -309,5 +342,17 @@ public class Entity : MonoBehaviour
     protected virtual void InputUpdates()
     {
 
+    }
+
+    public void ProcessHurtbox(EnemyHurtBox hurtBox)
+    {
+        Vector2 positionDifference = this.Body.position - (Vector2)hurtBox.transform.position;
+        this.TakeDamage(hurtBox.Damage);
+        this.RegisterImpactEvent(hurtBox.GetImpactEvent(positionDifference));
+        List<Collider2D> attachedColliders = new List<Collider2D>(this.Body.attachedColliderCount);
+        this.Body.GetAttachedColliders(attachedColliders);
+        CollisionIgnorance ignorance = new CollisionIgnorance(attachedColliders, hurtBox.Colliders, TIMETOIGNORECOLLIDERSAFTERHURTBOX);
+        this.collisionIgnorances.Add(ignorance);
+        ignorance.Apply();
     }
 }

@@ -688,7 +688,7 @@ PrefabInstance:
       objectReference: {fileID: 1629111029}
     - target: {fileID: 5535398657122306157, guid: 0dd152f29f611bb42829649efec69a8f, type: 3}
       propertyPath: StartPlayProc.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: AdvanceLevel
+      value: GoNextLevel
       objectReference: {fileID: 0}
     - target: {fileID: 5535398657122306157, guid: 0dd152f29f611bb42829649efec69a8f, type: 3}
       propertyPath: StartPlayProc.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
@@ -717,6 +717,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9c3a199d5d59cd442b6fbd97bb2949f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1216968878 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+  m_PrefabInstance: {fileID: 3455995520779386032}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b68927dd2147c6c4a93ddbf8d7f73079, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1001 &1246971357
@@ -1229,6 +1240,187 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 715f56af12060364490b00fa353593a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1001 &3455995520779386032
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3455995521996162077, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: m_Name
+      value: Enemy Spawn Settings Provider
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].EnemyCountToSpawn
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].SpawnSets.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].SpawnSets.Array.data[0].ToSpawn
+      value: 
+      objectReference: {fileID: 3307841845486508968, guid: 14366569b168a1b44a27b26990f08578, type: 3}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].SpawnSets.Array.data[0].SpawnTickets
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].MaxHealthGameOverLevels.m_PreInfinity
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].MaxHealthGameOverLevels.m_PostInfinity
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].MaxHealthGameOverLevels.m_Curve.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].ReloadSpeedReductionOverLevels.m_PreInfinity
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].ReloadSpeedReductionOverLevels.m_PostInfinity
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].ReloadSpeedReductionOverLevels.m_Curve.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].MaxHealthGameOverLevels.m_Curve.Array.data[1].time
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].MaxHealthGameOverLevels.m_Curve.Array.data[1].value
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].MaxHealthGameOverLevels.m_Curve.Array.data[0].inSlope
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].MaxHealthGameOverLevels.m_Curve.Array.data[1].inSlope
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].MaxHealthGameOverLevels.m_Curve.Array.data[0].outSlope
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].MaxHealthGameOverLevels.m_Curve.Array.data[1].inWeight
+      value: 0.33333334
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].MaxHealthGameOverLevels.m_Curve.Array.data[1].outSlope
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].MaxHealthGameOverLevels.m_Curve.Array.data[0].outWeight
+      value: 0.33333334
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].MaxHealthGameOverLevels.m_Curve.Array.data[0].tangentMode
+      value: 34
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].MaxHealthGameOverLevels.m_Curve.Array.data[1].tangentMode
+      value: 34
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].ReloadSpeedReductionOverLevels.m_Curve.Array.data[1].time
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].ReloadSpeedReductionOverLevels.m_Curve.Array.data[1].value
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].ReloadSpeedReductionOverLevels.m_Curve.Array.data[0].inSlope
+      value: 0.006
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].ReloadSpeedReductionOverLevels.m_Curve.Array.data[1].inSlope
+      value: 0.006
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].ReloadSpeedReductionOverLevels.m_Curve.Array.data[0].outSlope
+      value: 0.006
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].ReloadSpeedReductionOverLevels.m_Curve.Array.data[1].inWeight
+      value: 0.33333334
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].ReloadSpeedReductionOverLevels.m_Curve.Array.data[1].outSlope
+      value: 0.006
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].ReloadSpeedReductionOverLevels.m_Curve.Array.data[0].outWeight
+      value: 0.33333334
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].ReloadSpeedReductionOverLevels.m_Curve.Array.data[0].tangentMode
+      value: 34
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162078, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: EnemySpawnSettingsList.Array.data[0].ReloadSpeedReductionOverLevels.m_Curve.Array.data[1].tangentMode
+      value: 34
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162079, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: m_RootOrder
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162079, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162079, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162079, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162079, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162079, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162079, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162079, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162079, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162079, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3455995521996162079, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 319d766480ba0644da54e647393aa7e7, type: 3}
 --- !u!1001 &3725005177897138575
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1305,17 +1497,25 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 458104623}
     - target: {fileID: 3725005178417904506, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
+      propertyPath: EnemyCountToSpawn
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 3725005178417904506, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
       propertyPath: nextLevelEventCircle
       value: 
       objectReference: {fileID: 1117270869}
     - target: {fileID: 3725005178417904506, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
       propertyPath: maxWeaponDropsToStart
-      value: 20
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3725005178417904506, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
       propertyPath: minWeaponDropsToStart
-      value: 10
+      value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3725005178417904506, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
+      propertyPath: enemySpawnSettingsProvider
+      value: 
+      objectReference: {fileID: 1216968878}
     - target: {fileID: 3725005178417904507, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
       propertyPath: m_Name
       value: Single Level Director

@@ -157,7 +157,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WeaponName: Crackle Mk 2
-  timeBetweenShots: 0.3
+  timeBetweenShots: 1.4
   maximumAdditionalRandomTimeBetweenShots: 0
   projectilePF: {fileID: -2298407450490476539, guid: 7e1016a85c2f6334ab1e0f66c5a9155a, type: 3}
   randomStartSleepTimeModifierMax: 0
@@ -189,5 +189,5 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  maximumSpread: 0.15
+  maximumSpread: 0.05
   fieldRoot: {fileID: 1586440055277087811}

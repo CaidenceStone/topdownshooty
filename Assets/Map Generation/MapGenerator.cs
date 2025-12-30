@@ -2,6 +2,7 @@ using NavMeshPlus.Components;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Unity.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -19,7 +20,8 @@ public class MapGenerator : MonoBehaviour
     [SerializeReference]
     public Tilemap MyTilemap;
 
-    public static IReadOnlyList<SpatialCoordinate> NegativeSpace { get; set; } = new List<SpatialCoordinate>();
+    public static IReadOnlyList<SpatialCoordinate> NegativeSpaceSpatialCoordinates { get; set; } = new List<SpatialCoordinate>();
+    public static int NegativeSpaceSize { get; set; } = 0;
 
     [SerializeReference]
     private MapGenerationPlan plan;
@@ -41,8 +43,8 @@ public class MapGenerator : MonoBehaviour
     {
         MapReady = false;
 
-        List<SpatialCoordinate> negativeSpace = await this.plan.GenerateMapAsync(this.transform, this.MyTilemap);
-        NegativeSpace = negativeSpace;
+        await this.plan.GenerateMapAsync(this.transform, this.MyTilemap);
+        NegativeSpaceSize = NegativeSpaceSpatialCoordinates.Count;
 
         MapReady = true;
     }
@@ -64,7 +66,7 @@ public class MapGenerator : MonoBehaviour
         {
             return GetRandomNegativeSpacePointAtDistanceRangeFromPoint(near, SpatialReasoningCalculator.NegativeSpaceWithLegRoom, minDistance, maxDistance);
         }
-        return GetRandomNegativeSpacePointAtDistanceRangeFromPoint(near, NegativeSpace, minDistance, maxDistance);
+        return GetRandomNegativeSpacePointAtDistanceRangeFromPoint(near, NegativeSpaceSpatialCoordinates, minDistance, maxDistance);
     }
 
     /*
@@ -81,9 +83,9 @@ public class MapGenerator : MonoBehaviour
             return Vector2.zero;
         }
 
-        IReadOnlyList<SpatialCoordinate> coordinates = NegativeSpace;
+        IReadOnlyList<SpatialCoordinate> coordinates = NegativeSpaceSpatialCoordinates;
 
-        if (NegativeSpace.Count == 0)
+        if (NegativeSpaceSpatialCoordinates.Count == 0)
         {
             Debug.Log($"There is no negative space.");
             return Vector2.zero;

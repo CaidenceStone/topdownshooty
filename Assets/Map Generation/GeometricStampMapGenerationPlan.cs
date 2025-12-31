@@ -12,7 +12,7 @@ using UnityEngine.Tilemaps;
 [CreateAssetMenu(fileName = "MapGenerator", menuName = "Map Generation/Geometric Stamp Map Generation Plan", order = 1)]
 public class GeometricStampMapGenerationPlan : MapGenerationPlan
 {
-    const float SUFFICIENTDISTANCEFROMWALLFORROOMLINESS = 2f;
+    public const float SUFFICIENTDISTANCEFROMWALLFORROOMLINESS = .2f;
 
     public int WallFillingBufferSize = 5;
 
@@ -176,7 +176,7 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
             }
         });
 
-        MapBakingResult bakedCoordinates = await SpatialReasoningCalculator.BakeNeighborsAsync(negativeSpaceNativeArray, negativeSpace.Count, SUFFICIENTDISTANCEFROMWALLFORROOMLINESS);
+        MapBakingResult bakedCoordinates = await SpatialReasoningCalculator.BakeNeighborsGridAsync(negativeSpaceNativeArray, negativeSpace.Count, SUFFICIENTDISTANCEFROMWALLFORROOMLINESS);
         negativeSpaceNativeArray.Dispose();
 
         if (!Application.isPlaying)
@@ -191,7 +191,7 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
 
         Debug.Log($"Limiting negative space to {largestIslandSize}");
         List<SpatialCoordinate> limitedCoordinates = SpatialReasoningCalculator.LimitTo(bakedCoordinates.AllCoordinates, largestIsland.ToHashSet(), bakedCoordinates.CoordinatesWithLegroom.ToHashSet(), out IReadOnlyList<SpatialCoordinate> newCoordinatesWithRoom);
-        SpatialReasoningCalculator.SetPositions(limitedCoordinates, newCoordinatesWithRoom);
+        SpatialReasoningCalculator.SetPositions(bakedCoordinates.Chunks);
 
         foreach (SpatialCoordinate refillWalls in wallsToRefill)
         {

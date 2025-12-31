@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Unity.Collections;
 using Unity.VisualScripting;
+using UnityEditor.Callbacks;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -60,13 +61,13 @@ public class MapGenerator : MonoBehaviour
         return fromList[UnityEngine.Random.Range(0, fromList.Count - 1)].BasedOnPosition;
     }
 
-    public static Vector2 GetRandomNegativeSpacePointAtDistanceRangeFromPoint(Vector2 near, float minDistance, float maxDistance)
+    public static Vector2 GetRandomNegativeSpacePointAtDistanceRangeFromPoint(Vector2 near, float minDistance, float maxDistance, float minimumWallDistance)
     {
         if (SpatialReasoningCalculator.NegativeSpaceWithLegRoom.Count != 0)
         {
-            return GetRandomNegativeSpacePointAtDistanceRangeFromPoint(near, SpatialReasoningCalculator.NegativeSpaceWithLegRoom, minDistance, maxDistance);
+            return GetRandomNegativeSpacePointAtDistanceRangeFromPoint(near, SpatialReasoningCalculator.NegativeSpaceWithLegRoom, minDistance, maxDistance, minimumWallDistance);
         }
-        return GetRandomNegativeSpacePointAtDistanceRangeFromPoint(near, NegativeSpaceSpatialCoordinates, minDistance, maxDistance);
+        return GetRandomNegativeSpacePointAtDistanceRangeFromPoint(near, NegativeSpaceSpatialCoordinates, minDistance, maxDistance, minimumWallDistance);
     }
 
     /*
@@ -75,7 +76,7 @@ public class MapGenerator : MonoBehaviour
      * so they're redundant and messy
      * */
 
-    public static Vector2 GetRandomNegativeSpacePointAtDistanceRangeFromPoints(IReadOnlyList<Vector2> near, float minDistance, float maxDistance)
+    public static Vector2 GetRandomNegativeSpacePointAtDistanceRangeFromPoints(List<MapChunk> chunks, IReadOnlyList<Vector2> near, float minDistance, float maxDistance, float minimumRoomliness)
     {
         if (near.Count == 0)
         {
@@ -83,17 +84,50 @@ public class MapGenerator : MonoBehaviour
             return Vector2.zero;
         }
 
-        IReadOnlyList<SpatialCoordinate> coordinates = NegativeSpaceSpatialCoordinates;
-
-        if (NegativeSpaceSpatialCoordinates.Count == 0)
+        if (chunks.Count == 0)
         {
-            Debug.Log($"There is no negative space.");
+            Debug.LogError($"There are no chunks to search through.");
             return Vector2.zero;
         }
 
-        if (SpatialReasoningCalculator.NegativeSpaceWithLegRoom.Count > 0)
+        List<SpatialCoordinate> candidateCoordinate = new List<SpatialCoordinate>();
+
+        foreach (MapChunk chunk in chunks)
         {
-            coordinates = SpatialReasoningCalculator.NegativeSpaceWithLegRoom;
+            HashSet<SpatialCoordinate> chunkCoordinateCandidates = new HashSet<SpatialCoordinate>();
+            foreach (Vector2 nearPoint in near)
+            {
+                float distanceToChunk = Vector2.Distance(chunk.VisualCenter, nearPoint);
+                if (distanceToChunk < minDistance - chunk.ChunkHalfWidth || distanceToChunk > maxDistance + chunk.ChunkHalfWidth)
+                {
+                    // Not a match
+                    break;
+                }
+
+                foreach (SpatialCoordinate coordinate in chunk.CoordinatesInChunk)
+                {
+                    if (coordinate.ClosestWallInWorldSpace < minimumRoomliness)
+                    {
+                        continue;
+                    }
+
+                    float distanceToCoordinate = Vector2.Distance(coordinate.WorldPosition, nearPoint);
+                    if (distanceToCoordinate < minDistance || distanceToCoordinate > maxDistance)
+                    {
+                        break;
+                    }
+                    chunkCoordinateCandidates.Add(coordinate);
+                }
+            }
+
+            // TODO: Ensure that this is near ALL applicable points
+            candidateCoordinate.AddRange(chunkCoordinateCandidates);
+        }
+
+        if (candidateCoordinate.Count == 0)
+        {
+            Debug.LogError($"There are no valid candidate coordinates.");
+            return Vector2.zero;
         }
 
         Vector2 randomSpace = Vector2.zero;
@@ -101,7 +135,7 @@ public class MapGenerator : MonoBehaviour
         {
             foreach (Vector2 nearPoint in near)
             {
-                randomSpace = coordinates[UnityEngine.Random.Range(0, coordinates.Count)].WorldPosition;
+                randomSpace = candidateCoordinate[UnityEngine.Random.Range(0, candidateCoordinate.Count)].WorldPosition;
                 float distance = Vector2.Distance(randomSpace, nearPoint);
 
                 if (distance > minDistance && distance < maxDistance)
@@ -137,7 +171,7 @@ public class MapGenerator : MonoBehaviour
         return randomSpace;
     }
 
-    public static Vector2Int GetRandomNegativeSpacePointAtDistanceRangeFromPoint(Vector2Int near, IReadOnlyList<SpatialCoordinate> subset, float minDistance, float maxDistance)
+    public static Vector2 GetRandomNegativeSpacePointAtDistanceRangeFromPoint(Vector2 near, IReadOnlyList<SpatialCoordinate> subset, float minDistance, float maxDistance, float minimumRoomliness)
     {
         if (subset.Count == 0)
         {
@@ -152,12 +186,19 @@ public class MapGenerator : MonoBehaviour
             randomSpace = subset[randomIndex].BasedOnPosition;
             float distance = Vector2.Distance(randomSpace, near);
 
+            if (subset[randomIndex].ClosestWallInWorldSpace < minimumRoomliness)
+            {
+                continue;
+            }
+
             if (distance > minDistance && distance < maxDistance)
             {
                 return randomSpace;
             }
         }
-        return randomSpace;
+
+        Debug.Log($"Couldn't find an appropriate negative space, so just returning the near point.");
+        return near;
     }
 
     public static Vector2Int GetRandomNegativeSpacePointAtDistanceRangeFromPoint(SpatialCoordinate near, IReadOnlyList<SpatialCoordinate> subset, float minDistance, float maxDistance)

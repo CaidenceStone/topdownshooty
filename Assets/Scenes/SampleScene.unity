@@ -658,6 +658,11 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 256
   raycastDivisionSteps: 8
+  orthogonalNeighbors:
+  - {x: 1, y: 0}
+  - {x: -1, y: 0}
+  - {x: 0, y: 1}
+  - {x: 0, y: -1}
   MapGeneratorTransform: {fileID: 3725005177897138577}
 --- !u!4 &907602071
 Transform:
@@ -1577,11 +1582,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8296038979404345774, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
       propertyPath: m_TileAnchor.x
-      value: -0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8296038979404345774, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
       propertyPath: m_TileAnchor.y
-      value: -0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8296038979404345774, guid: a6c525eb3fef8444ea42793a63f858cf, type: 3}
       propertyPath: m_TileAnchor.z

@@ -20,15 +20,16 @@ MonoBehaviour:
   MapHeightMin: 50
   MapHeightMax: 100
   ExtraWallBuffer: 10
-  StampCount: 5
-  CircleStampRadiusMin: 8
-  CircleStampRadiusMax: 15
-  LineThicknessMin: 2
-  LineThicknessMax: 3
-  InnerStampMinCount: 1
-  InnerStampMaxCount: 6
+  StampCount: 10
+  CircleStampRadiusMin: 14
+  CircleStampRadiusMax: 20
+  LineThicknessMin: 4
+  LineThicknessMax: 5
+  InnerStampMinCount: 0
+  InnerStampMaxCount: 10
   CircleInnerStampRadiusMin: 2
-  CircleInnerStampRadiusMax: 5
-  MinDistanceBetweenStamps: 4
-  MaxDistanceBetweenStamps: 15
+  CircleInnerStampRadiusMax: 8
+  MinDistanceBetweenStamps: 10
+  MaxDistanceBetweenStamps: 30
+  MinimumWallProximity: 3
   WallTilebase: {fileID: -6100500433400396510, guid: 3cf9627c17b1c7f4da6a2b29eed73d71, type: 3}

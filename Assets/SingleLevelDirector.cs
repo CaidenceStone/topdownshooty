@@ -107,7 +107,7 @@ public class SingleLevelDirector : MonoBehaviour
         this.startPlayCircle.transform.position = (Vector2)(startPlayCirclePosition) / MapGenerator.COORDINATETOPOSITIONDIVISOR;
         this.gameplayCamera.SnapPosition(this.startPlayCircle.transform.position);
 
-        this.PlayerStartingPosition = MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoint(startPlayCirclePosition, this.minimumDistanceFromStartCircle, this.maximumDistanceFromStartCircle);
+        this.PlayerStartingPosition = MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoint(startPlayCirclePosition, this.minimumDistanceFromStartCircle, this.maximumDistanceFromStartCircle, GeometricStampMapGenerationPlan.SUFFICIENTDISTANCEFROMWALLFORROOMLINESS);
 
         foreach (PlayerIdentity curIdentity in StaticLevelDirector.GetPlayerIdentities())
         {
@@ -149,7 +149,7 @@ public class SingleLevelDirector : MonoBehaviour
         }
 
         this.PlayerStartingPosition = MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoint
-            (this.PlayerStartingPosition, this.minimumDistanceFromStartCircle, this.maximumDistanceFromStartCircle);
+            ((Vector2)this.PlayerStartingPosition, this.minimumDistanceFromStartCircle, this.maximumDistanceFromStartCircle, GeometricStampMapGenerationPlan.SUFFICIENTDISTANCEFROMWALLFORROOMLINESS);
         newController.Body.position = (Vector2)this.PlayerStartingPosition / MapGenerator.COORDINATETOPOSITIONDIVISOR;
 
         newController.SetDevices(fromDevices);
@@ -168,7 +168,7 @@ public class SingleLevelDirector : MonoBehaviour
                 Debug.Log($"No more spawn tickets are active");
                 break;
             }
-            Vector2 positionToSpawn = MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoints(currentCharacterPositions, this.minimumEnemySpawnStartDistance, float.MaxValue);
+            Vector2 positionToSpawn = MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoints(SpatialReasoningCalculator.CurrentInstance.Chunks, currentCharacterPositions, this.minimumEnemySpawnStartDistance, float.MaxValue, GeometricStampMapGenerationPlan.SUFFICIENTDISTANCEFROMWALLFORROOMLINESS);
             Entity newEntity = Instantiate(entityPF, this.transform);
             newEntity.transform.position = positionToSpawn;
         }
@@ -177,7 +177,7 @@ public class SingleLevelDirector : MonoBehaviour
         Debug.Log($"Spawning {weaponDropCount} initial weapon drops");
         for (int ii = 0; ii < weaponDropCount; ii++)
         {
-            Vector2 positionToSpawn = MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoints(currentCharacterPositions, this.minimumDistanceFromStartCircle, float.MaxValue);
+            Vector2 positionToSpawn = MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoints(SpatialReasoningCalculator.CurrentInstance.Chunks, currentCharacterPositions, this.minimumDistanceFromStartCircle, float.MaxValue, GeometricStampMapGenerationPlan.SUFFICIENTDISTANCEFROMWALLFORROOMLINESS);
             this.dropManager.DoDropWeapon(positionToSpawn);
         }
 
@@ -236,11 +236,11 @@ public class SingleLevelDirector : MonoBehaviour
         Vector2 playerPosition = this.alivePlayers[UnityEngine.Random.Range(0, this.alivePlayers.Count)].Body.position;
         Vector2 warpPosition = MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoint(new Vector2Int
             (
-                Mathf.RoundToInt(playerPosition.x * MapGenerator.COORDINATETOPOSITIONDIVISOR), 
-                Mathf.RoundToInt(playerPosition.y * MapGenerator.COORDINATETOPOSITIONDIVISOR)
+                Mathf.FloorToInt(playerPosition.x * MapGenerator.COORDINATETOPOSITIONDIVISOR), 
+                Mathf.FloorToInt(playerPosition.y * MapGenerator.COORDINATETOPOSITIONDIVISOR)
             ),
             this.minimumDistanceFromStartCircle,
-            this.maximumDistanceFromStartCircle);
+            this.maximumDistanceFromStartCircle, GeometricStampMapGenerationPlan.SUFFICIENTDISTANCEFROMWALLFORROOMLINESS);
         this.nextLevelEventCircle.transform.position = warpPosition;
         this.nextLevelEventCircle.gameObject.SetActive(true);
     }

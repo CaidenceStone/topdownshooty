@@ -12,6 +12,10 @@ public class Entity : MonoBehaviour
     public const int MAXIMUMSLIDEITERATIONS = 10;
     public const float PLANCKCOLLISIONDISTANCE = .01f;
 
+    public SpatialCoordinate LastStoodCoordinate { get; set; }
+    public Vector2 LastStoodVector2 { get; set; }
+
+
     [SerializeReference]
     public Rigidbody2D Body;
     [SerializeField]
@@ -79,6 +83,17 @@ public class Entity : MonoBehaviour
         if (this.ownPersonalHealthCanvas != null)
         {
             this.ownPersonalHealthCanvas.Clear();
+        }
+
+        Vector2Int roundedCoordinate = new Vector2Int(Mathf.FloorToInt(this.Body.position.x * MapGenerator.COORDINATETOPOSITIONDIVISOR), Mathf.FloorToInt(this.Body.position.y * MapGenerator.COORDINATETOPOSITIONDIVISOR));
+        if (SpatialReasoningCalculator.CurrentInstance.Positions.TryGetValue(roundedCoordinate, out SpatialCoordinate onTile))
+        {
+            this.LastStoodCoordinate = onTile;
+            this.LastStoodVector2 = this.Body.position;
+        }
+        else
+        {
+            Debug.LogError($"This entity is starting on {roundedCoordinate}, but that coordinate is not in the database!");
         }
 
         StaticLevelDirector.CurrentLevelDirector.RegisterEntity(this);
@@ -336,6 +351,13 @@ public class Entity : MonoBehaviour
         {
             // Otherwise, move the full distance
             this.Body.position += movement;
+        }
+
+        Vector2Int roundedCoordinate = new Vector2Int(Mathf.FloorToInt(this.Body.position.x * MapGenerator.COORDINATETOPOSITIONDIVISOR), Mathf.FloorToInt(this.Body.position.y * MapGenerator.COORDINATETOPOSITIONDIVISOR));
+        if (SpatialReasoningCalculator.CurrentInstance.Positions.TryGetValue(roundedCoordinate, out SpatialCoordinate onTile))
+        {
+            this.LastStoodCoordinate = onTile;
+            this.LastStoodVector2 = this.Body.position;
         }
     }
 

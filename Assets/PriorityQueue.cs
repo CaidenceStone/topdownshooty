@@ -16,7 +16,7 @@ public class PriorityQueue<T>
         {
             if (entry.Score > entries[ii].Score)
             {
-                entries.Insert(0, entry);
+                entries.Insert(ii, entry);
                 return;
             }
         }

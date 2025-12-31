@@ -35,71 +35,127 @@ public class SpatialReasoningCalculator : MonoBehaviour
 
     const float OVERLAPINITIALCHECKCIRCLERADIUS = .3f;
 
+    /// <summary>
+    /// When generating a map, break tiles in to chunks of this size squared.
+    /// </summary>
+    public const int CHUNKDIMENSIONSIZE = 10;
+
     public static SpatialReasoningCalculator CurrentInstance { get; private set; }
     public static List<SpatialCoordinate> NegativeSpaceWithLegRoom { get; private set; } = new List<SpatialCoordinate>();
 
     private bool baked { get; set; } = false;
     public Dictionary<Vector2Int, SpatialCoordinate> Positions { get; set; } = new Dictionary<Vector2Int, SpatialCoordinate>();
+    public List<MapChunk> Chunks { get; private set; } = new List<MapChunk>();
 
     [SerializeField]
     private LayerMask environmentLayerMask;
     [SerializeField]
     private int raycastDivisionSteps = 4 * 4 * 4;
     private Vector2[] raycastAnglesToCheckVector2s { get; set; } = new Vector2[] { };
+    [SerializeField]
+    private Vector2Int[] orthogonalNeighbors = new Vector2Int[] { };
+    private Dictionary<Vector2Int, Vector2Int[]> relativeNeighborToNeighbors { get; set; } = new Dictionary<Vector2Int, Vector2Int[]>();
     [SerializeReference]
     public Transform MapGeneratorTransform;
 
     private static List<SpatialCoordinate> spatialCoordinatesReusableList { get; set; } = new List<SpatialCoordinate>();
 
-    public Path GetPath(Vector2 startingPosition, Vector2 goal)
+    public bool TryGetPath(SpatialCoordinate startingCoordinate, Vector2 startingPosition, SpatialCoordinate goalCoordinate, Vector2 goalVector, float minimumWallDistance, out Path calculatedPath)
     {
-        Vector2 worldspacedStartingCoordinate = startingPosition * MapGenerator.COORDINATETOPOSITIONDIVISOR;
-        Vector2Int startingCoordinate = new Vector2Int(Mathf.RoundToInt(worldspacedStartingCoordinate.x), Mathf.RoundToInt(worldspacedStartingCoordinate.y));
-
-        if (!this.Positions.TryGetValue(startingCoordinate, out SpatialCoordinate startingSpatialCoordinate))
+        if (startingCoordinate == goalCoordinate)
         {
-            Debug.Log($"Cannot find path from startingPosition {startingPosition} {startingCoordinate}, because that coordinate is not on the map");
-            return null;
+            // We're already here!
+            calculatedPath = new Path(startingPosition, goalVector);
+            return true;
         }
 
-        Vector2 worldspacedGoalCoordinate = goal * MapGenerator.COORDINATETOPOSITIONDIVISOR;
-        Vector2Int goalCoordinate = new Vector2Int(Mathf.RoundToInt(worldspacedGoalCoordinate.x), Mathf.RoundToInt(worldspacedGoalCoordinate.y));
+        Dictionary<SpatialCoordinate, PriorityQueueEntry<SpatialCoordinate>> previousVisited = new Dictionary<SpatialCoordinate, PriorityQueueEntry<SpatialCoordinate>>();
+        PriorityQueue<SpatialCoordinate> coordinateFrontier = new PriorityQueue<SpatialCoordinate>();
+        PriorityQueueEntry<SpatialCoordinate> startingSpatialCoordinatePriorityEntry = new PriorityQueueEntry<SpatialCoordinate>(startingCoordinate);
+        coordinateFrontier.AddEntry(new PriorityQueueEntry<SpatialCoordinate>(startingCoordinate));
+        previousVisited.Add(startingCoordinate, startingSpatialCoordinatePriorityEntry);
 
-        if (!this.Positions.TryGetValue(goalCoordinate, out SpatialCoordinate goalSpatialCoordinate))
+        // For the first iteration, we need to account for the subposition in this vector; build a scoring list based on current position rather than what neighbors say
+        bool firstEntryException = true;
+
+        int coordinateFrontiersCalculated = 0;
+        while (coordinateFrontier.TryGetHighestScoringValue(out PriorityQueueEntry<SpatialCoordinate> currentFrontierEntry))
         {
-            Debug.Log($"Cannot find path from goal {goal} {goalCoordinate}, because that coordinate is not on the map");
-            return null;
-        }
+            coordinateFrontiersCalculated++;
 
-        HashSet<SpatialCoordinate> visited = new HashSet<SpatialCoordinate>();
-        PriorityQueue<SpatialCoordinate> coordinatesToVisit = new PriorityQueue<SpatialCoordinate>();
-        coordinatesToVisit.AddEntry(new PriorityQueueEntry<SpatialCoordinate>(startingSpatialCoordinate));
-
-        while (coordinatesToVisit.TryGetHighestScoringValue(out PriorityQueueEntry<SpatialCoordinate> currentEntry))
-        {
             // For each neighbor relationship this coordinate has, determine which one is the closest to the goal
-            foreach (SpatialCoordinate coord in currentEntry.Value.NeighborsToDistances.Keys)
+            foreach (SpatialCoordinate coord in currentFrontierEntry.Value.NeighborsToDistances.Keys)
             {
-                if (ReferenceEquals(coord, goalSpatialCoordinate))
+                double distanceTowardsNode;
+
+                if (firstEntryException)
                 {
-                    // Found our goal!
-                    return new Path(startingPosition, currentEntry.AllEntriesToList());
+                    distanceTowardsNode = Vector2.Distance(startingPosition, coord.WorldPosition);
+                }
+                else
+                {
+                    distanceTowardsNode = currentFrontierEntry.Value.NeighborsToDistances[coord];
                 }
 
-                if (visited.Contains(coord))
+                if (ReferenceEquals(coord, goalCoordinate))
+                {
+                    // Debug.Log($"Found path with {coordinateFrontiersCalculated} iterations");
+
+                    // Found our goal!
+                    List<SpatialCoordinate> coordinatePath = currentFrontierEntry.AllEntriesToList();
+
+                    List<Vector2> vectorPath = new List<Vector2>() { };
+                    for (int ii = 0; ii < coordinatePath.Count - 1; ii++)
+                    {
+                        vectorPath.Add(coordinatePath[ii].WorldPosition);
+                    }
+                    vectorPath.Add(goalCoordinate.WorldPosition);
+
+                    calculatedPath = new Path(startingPosition, vectorPath);
+                    return true;
+                }
+
+                if (coord.ClosestWallInWorldSpace < minimumWallDistance)
                 {
                     continue;
                 }
 
-                float distanceToGoal = Vector2.Distance(coord.WorldPosition, goal);
-                double distanceTowardsNode = currentEntry.TravelCost - currentEntry.Value.NeighborsToDistances[coord];
-                coordinatesToVisit.AddEntry(new PriorityQueueEntry<SpatialCoordinate>(coord, -distanceToGoal + currentEntry.TravelCost, currentEntry.TravelCost - distanceTowardsNode, currentEntry));
-                visited.Add(coord);
+                // The distance from this newly considered coordinate and the goal is the distance to goal
+                // The score is the total travel cost (distances covered) minus the distance to the goal from this tile
+                float distanceToGoal = Vector2.Distance(coord.WorldPosition, goalVector);
+                double travelCost = currentFrontierEntry.TravelCost + distanceTowardsNode;
+                double score = -distanceToGoal - currentFrontierEntry.TravelCost;
+                PriorityQueueEntry<SpatialCoordinate> consideredNewEntry = new PriorityQueueEntry<SpatialCoordinate>(coord, score, currentFrontierEntry.TravelCost + distanceTowardsNode, currentFrontierEntry);
+
+                if (previousVisited.TryGetValue(coord, out PriorityQueueEntry<SpatialCoordinate> previousEntry))
+                {
+                    // If we've visited this node before, but our current path is better scoring, replace it
+                    if (consideredNewEntry.Score > previousEntry.Score)
+                    {
+                        // Debug.Log($"Replacing an entry for {previousEntry.Value.BasedOnPosition} with {consideredNewEntry.Value.BasedOnPosition} because {consideredNewEntry.Score} > {previousEntry.Score}");
+                        previousVisited[coord] = consideredNewEntry;
+                        coordinateFrontier.AddEntry(consideredNewEntry);
+                    }
+                    else
+                    {
+                        // Otherwise if our score is worse, just skip this one
+                        continue;
+                    }
+                }
+                else
+                {
+                    previousVisited.Add(consideredNewEntry.Value, consideredNewEntry);
+                    coordinateFrontier.AddEntry(consideredNewEntry);
+                }
             }
+
+            // All other entries can use cached values
+            firstEntryException = false;
         }
 
-        Debug.Log($"I couldn't find a path from {startingPosition} to {goal}!");
-        return null;
+        Debug.Log($"I couldn't find a path from {startingPosition} to {goalVector}! Had {coordinateFrontiersCalculated} iterations.");
+        calculatedPath = null;
+        return false;
     }
 
     private void OnEnable()
@@ -124,6 +180,49 @@ public class SpatialReasoningCalculator : MonoBehaviour
                 if (IsPointCloseEnoughToLine(bakedCoordinateVector2s[ii], pointA, pointB, precalculatedLineDirection, distancePermitted, precalculatedLineDistance))
                 {
                     spatialCoordinatesWithinDistanceOfLine.Add(bakedCoordinates[ii]);
+                }
+            }
+        });
+
+        // Debug.Log($"{spatialCoordinatesWithinDistanceOfLine.Count} detected");
+
+        return spatialCoordinatesWithinDistanceOfLine.ToList();
+    }
+
+    public static async Task<List<SpatialCoordinate>> GetPositionsWithinDistanceOfLineAsync(IReadOnlyList<MapChunk> bakedChunks, float distancePermitted, Vector2 pointA, Vector2 pointB, Vector2 precalculatedLineDirection, float precalculatedLineDistance)
+    {
+        int bakedChunksCount = bakedChunks.Count;
+
+        // A coordinate can only be relevant to this process if the chunk that it is in is close enough to the operation
+        float acceptableDistanceForChunkInclusion = (precalculatedLineDistance / 2f + distancePermitted);
+        List<MapChunk> chunksWithinDistance = new List<MapChunk>();
+
+        await Task.Run(() =>
+        {
+            for (int ii = 0; ii < bakedChunksCount; ii++)
+            {
+                if (Vector2.Distance(bakedChunks[ii].VisualCenter, pointA) < acceptableDistanceForChunkInclusion)
+                {
+                    chunksWithinDistance.Add(bakedChunks[ii]);
+                }
+            }
+        });
+
+        int chunkCount = chunksWithinDistance.Count;
+        ConcurrentBag<SpatialCoordinate> spatialCoordinatesWithinDistanceOfLine = new ConcurrentBag<SpatialCoordinate>();
+
+        await Task.Run(() =>
+        {
+            for (int ii = 0; ii < chunkCount; ii++)
+            {
+                List<SpatialCoordinate> coordinatesInChunk = chunksWithinDistance[ii].CoordinatesInChunk;
+                for (int jj = 0; jj < coordinatesInChunk.Count; jj++)
+                {
+                    SpatialCoordinate thisCoordinate = coordinatesInChunk[jj];
+                    if (IsPointCloseEnoughToLine(thisCoordinate.WorldPosition, pointA, pointB, precalculatedLineDirection, distancePermitted, precalculatedLineDistance))
+                    {
+                        spatialCoordinatesWithinDistanceOfLine.Add(thisCoordinate);
+                    }
                 }
             }
         });
@@ -278,6 +377,35 @@ public class SpatialReasoningCalculator : MonoBehaviour
         }
     }
 
+
+    public static void SetPositions(IReadOnlyList<MapChunk> chunks)
+    {
+        CurrentInstance.Chunks.Clear();
+        CurrentInstance.Positions.Clear();
+        NegativeSpaceWithLegRoom.Clear();
+        CurrentInstance.Chunks.AddRange(chunks);
+
+        // Debug.Log($"Setting positions with {chunks.Count} chunks");
+
+        foreach (MapChunk chunk in chunks)
+        {
+            // Debug.Log($"Setting position for chunk with {chunk.CoordinatesInChunk.Count} coordinates in the chunk");
+
+            foreach (SpatialCoordinate coordinate in chunk.CoordinatesInChunk)
+            {
+                CurrentInstance.Positions.Add(coordinate.BasedOnPosition, coordinate);
+            }
+
+            // Debug.Log($"Setting roomy positions for chunk with {chunk.CoordinatesInChunkWithLegRoom.Count} coordinates in the chunk");
+
+            foreach (SpatialCoordinate coordinate in chunk.CoordinatesInChunkWithLegRoom)
+            {
+                NegativeSpaceWithLegRoom.Add(coordinate);
+            }
+        }
+    }
+
+    [Obsolete]
     public static async Task<MapBakingResult> BakeNeighborsAsync(NativeArray<Vector2Int> positions, int positionsLength, float roomThreshold)
     {
         // Generate the spatial awareness raycasts by dividing them by the step count
@@ -293,6 +421,9 @@ public class SpatialReasoningCalculator : MonoBehaviour
         List<SpatialCoordinate> foundCoordinatesWithRoom = new List<SpatialCoordinate>(positionsLength);
         NativeArray<Vector2> everyCoordinateVector2 = new NativeArray<Vector2>(positionsLength, Allocator.Persistent);
 
+        Vector2Int min = new Vector2Int(int.MaxValue, int.MaxValue);
+        Vector2Int max = new Vector2Int(int.MinValue, int.MinValue);
+
         await Task.Run(() =>
         {
             for (int positionIndex = 0; positionIndex < positionsLength; positionIndex++)
@@ -301,19 +432,48 @@ public class SpatialReasoningCalculator : MonoBehaviour
                 SpatialCoordinate newCoordinate = new SpatialCoordinate(currentCoordinate);
                 everyCoordinate.Add(newCoordinate);
                 everyCoordinateVector2[positionIndex] = newCoordinate.WorldPosition;
+
+                min.x = Mathf.Min(min.x, currentCoordinate.x);
+                min.y = Mathf.Min(min.y, currentCoordinate.y);
+                max.x = Mathf.Max(max.x, currentCoordinate.x);
+                max.y = Mathf.Max(max.y, currentCoordinate.y);
             }
         });
+
+        // Break the coordinates in to a grid that can contain each of them in chunks
+        Dictionary<Vector2Int, MapChunk> chunkCoordinateToChunk = new Dictionary<Vector2Int, MapChunk>();
+        for (int xx = min.x; xx <= max.x; xx += CHUNKDIMENSIONSIZE)
+        {
+            for (int yy = min.y; yy <= max.y; yy += CHUNKDIMENSIONSIZE)
+            {
+                Vector2Int chunkCoordinate = GetChunkCoordinate(xx, yy);
+                chunkCoordinateToChunk.Add(chunkCoordinate, new MapChunk(chunkCoordinate));
+            }
+        }
+
+        // Now sort each coordinate in to chunks
+        await Task.Run(() =>
+        {
+            for (int positionIndex = 0; positionIndex < positionsLength; positionIndex++)
+            {
+                SpatialCoordinate thisPosition = everyCoordinate[positionIndex];
+                Vector2Int thisChunkCoordinate = GetChunkCoordinate(thisPosition.BasedOnPosition);
+                chunkCoordinateToChunk[thisChunkCoordinate].CoordinatesInChunk.Add(thisPosition);
+            }
+        });
+
+        List<MapChunk> chunks = new List<MapChunk>(chunkCoordinateToChunk.Values);
 
         // Now that we have a lookup table of each of these, we can build relationships
         for (int positionIndex = 0; positionIndex < positionsLength; positionIndex++)
         {
             SpatialCoordinate currentSpatialCoordinate = everyCoordinate[positionIndex];
 
-            // If there's an overlap directly on this circle, then it has no neighbors
-            if (Physics2D.OverlapCircle(currentSpatialCoordinate.WorldPosition, OVERLAPINITIALCHECKCIRCLERADIUS, CurrentInstance.environmentLayerMask))
-            {
-                continue;
-            }
+            //// If there's an overlap directly on this circle, then it has no neighbors
+            //if (Physics2D.OverlapCircle(currentSpatialCoordinate.WorldPosition, OVERLAPINITIALCHECKCIRCLERADIUS, CurrentInstance.environmentLayerMask))
+            //{
+            //    continue;
+            //}
 
             float closestWall = float.MaxValue;
             // For a set of predetermined directions, project a raycast
@@ -351,7 +511,7 @@ public class SpatialReasoningCalculator : MonoBehaviour
 
                 await Task.Run(async () =>
                 {
-                    neighborsOnLine = await GetPositionsWithinDistanceOfLineAsync(everyCoordinate, everyCoordinateVector2, NEIGHBORLINETOLERANCE, currentSpatialCoordinate.WorldPosition, lastPoint, angleToCheck, lineDistance);
+                    neighborsOnLine = await GetPositionsWithinDistanceOfLineAsync(chunks, NEIGHBORLINETOLERANCE, currentSpatialCoordinate.WorldPosition, lastPoint, angleToCheck, lineDistance);
                 });
                 
                 // Debug.Log($"Identified {neighborsOnLine.Count} neighbors in the {raycastAnglesToCheck[ii]} angle");
@@ -385,7 +545,104 @@ public class SpatialReasoningCalculator : MonoBehaviour
 #endif
         }
 
-        return new MapBakingResult(everyCoordinate, foundCoordinatesWithRoom);
+        return new MapBakingResult(everyCoordinate, foundCoordinatesWithRoom, chunks);
+    }
+
+
+    public static async Task<MapBakingResult> BakeNeighborsGridAsync(NativeArray<Vector2Int> positions, int positionsLength, float roomThreshold)
+    {
+        // First build a lookup table of every spatial coordinate
+        List<SpatialCoordinate> everyCoordinate = new List<SpatialCoordinate>(positionsLength);
+        List<SpatialCoordinate> foundCoordinatesWithRoom = new List<SpatialCoordinate>(positionsLength);
+        NativeArray<Vector2> everyCoordinateVector2 = new NativeArray<Vector2>(positionsLength, Allocator.Persistent);
+
+        Vector2Int min = new Vector2Int(int.MaxValue, int.MaxValue);
+        Vector2Int max = new Vector2Int(int.MinValue, int.MinValue);
+
+        Dictionary<Vector2Int, Vector2Int[]> neighborCheckTree = BuildNeighborPossiblePositions(CurrentInstance.orthogonalNeighbors, MAXIMUMNEIGHBORDISTANCE);
+
+        Dictionary<Vector2Int, SpatialCoordinate> coordinateAtPosition = new Dictionary<Vector2Int, SpatialCoordinate>();
+
+        await Task.Run(() =>
+        {
+            for (int positionIndex = 0; positionIndex < positionsLength; positionIndex++)
+            {
+                Vector2Int currentCoordinate = positions[positionIndex];
+                SpatialCoordinate newCoordinate = new SpatialCoordinate(currentCoordinate);
+                everyCoordinate.Add(newCoordinate);
+                everyCoordinateVector2[positionIndex] = newCoordinate.WorldPosition;
+
+                min.x = Mathf.Min(min.x, currentCoordinate.x);
+                min.y = Mathf.Min(min.y, currentCoordinate.y);
+                max.x = Mathf.Max(max.x, currentCoordinate.x);
+                max.y = Mathf.Max(max.y, currentCoordinate.y);
+
+                coordinateAtPosition.Add(currentCoordinate, newCoordinate);
+            }
+        });
+
+        // Break the coordinates in to a grid that can contain each of them in chunks
+        Dictionary<Vector2Int, MapChunk> chunkCoordinateToChunk = new Dictionary<Vector2Int, MapChunk>();
+        for (int xx = min.x; xx < max.x + CHUNKDIMENSIONSIZE; xx += CHUNKDIMENSIONSIZE)
+        {
+            for (int yy = min.y; yy < max.y + CHUNKDIMENSIONSIZE; yy += CHUNKDIMENSIONSIZE)
+            {
+                Vector2Int chunkCoordinate = GetChunkCoordinate(xx, yy);
+                chunkCoordinateToChunk.Add(chunkCoordinate, new MapChunk(chunkCoordinate));
+            }
+        }
+
+        // Now sort each coordinate in to chunks
+        await Task.Run(() =>
+        {
+            for (int positionIndex = 0; positionIndex < positionsLength; positionIndex++)
+            {
+                SpatialCoordinate thisPosition = everyCoordinate[positionIndex];
+                Vector2Int thisChunkCoordinate = GetChunkCoordinate(thisPosition.BasedOnPosition);
+                chunkCoordinateToChunk[thisChunkCoordinate].CoordinatesInChunk.Add(thisPosition);
+            }
+        });
+
+        List<MapChunk> chunks = new List<MapChunk>(chunkCoordinateToChunk.Values);
+        int previousChunkCount = chunks.Count;
+        // Clear each chunk that has no positions in it
+        for (int ii = previousChunkCount - 1; ii >= 0; ii--)
+        {
+            if (chunks[ii].CoordinatesInChunk.Count == 0)
+            {
+                chunks.RemoveAt(ii);
+            }
+        }
+
+        Debug.Log($"Out of {previousChunkCount}, {previousChunkCount - chunks.Count} have been culled for being empty.");
+
+        // Now that we have a lookup table of each of these, we can build relationships
+        for (int chunkIndex = 0; chunkIndex < chunks.Count; chunkIndex++)
+        {
+            MapChunk thisChunk = chunks[chunkIndex];
+            for (int positionIndex = 0; positionIndex < chunks[chunkIndex].CoordinatesInChunk.Count; positionIndex++)
+            {
+                SpatialCoordinate currentSpatialCoordinate = thisChunk.CoordinatesInChunk[positionIndex];
+                SetNeighbors(currentSpatialCoordinate, neighborCheckTree, coordinateAtPosition, out float closestWall);
+
+                // Debug.Log($"{spatialCoordinate.BasedOnPosition} was determined to have {spatialCoordinate.NeighborsToDistances.Count} neighbors. Closest wall was {closestWall}.");
+                currentSpatialCoordinate.ClosestWallInWorldSpace = closestWall;
+                if (closestWall > roomThreshold)
+                {
+                    foundCoordinatesWithRoom.Add(currentSpatialCoordinate);
+                    thisChunk.CoordinatesInChunkWithLegRoom.Add(currentSpatialCoordinate);
+                }
+
+#if UNITY_EDITOR
+                if (!Application.isPlaying)
+                {
+                    return default(MapBakingResult);
+                }
+            }
+#endif
+        }
+
+        return new MapBakingResult(everyCoordinate, foundCoordinatesWithRoom, chunks);
     }
 
     #region Old Synchronous Methods
@@ -502,7 +759,83 @@ public class SpatialReasoningCalculator : MonoBehaviour
         return spatialCoordinatesWithinDistanceOfLine.ToList();
     }
 
+
     #endregion
+
+    public static Vector2Int GetChunkCoordinate(Vector2Int xy)
+    {
+        return GetChunkCoordinate(xy.x, xy.y);
+    }
+
+    public static Vector2Int GetChunkCoordinate(int x, int y)
+    {
+        return new Vector2Int(Mathf.FloorToInt((float)x / (float)CHUNKDIMENSIONSIZE), Mathf.FloorToInt((float)y / (float)CHUNKDIMENSIONSIZE));
+    }
+
+    public static Dictionary<Vector2Int, Vector2Int[]> BuildNeighborPossiblePositions(Vector2Int[] orthogonalNeighbors, float allowedDistance)
+    {
+        HashSet<Vector2Int> visited = new HashSet<Vector2Int>() { Vector2Int.zero };
+        Dictionary<Vector2Int, Vector2Int[]> neighbors = new Dictionary<Vector2Int, Vector2Int[]>();
+        List<Vector2Int> nextNeighborsToCheck = new List<Vector2Int>() { Vector2Int.zero };
+
+        while (nextNeighborsToCheck.Count > 0)
+        {
+            Vector2Int nextNeighbor = nextNeighborsToCheck[0];
+            nextNeighborsToCheck.RemoveAt(0);
+
+            List<Vector2Int> neighborsOfNextNeighbor = new List<Vector2Int>();
+            foreach (Vector2Int orthogonal in orthogonalNeighbors)
+            {
+                Vector2Int nextOrthogonal = nextNeighbor + orthogonal;
+                if (!visited.Contains(nextOrthogonal) && Vector2.Distance(Vector2.zero, (Vector2)(nextOrthogonal) / MapGenerator.COORDINATETOPOSITIONDIVISOR) <= allowedDistance)
+                {
+                    nextNeighborsToCheck.Add(nextOrthogonal);
+                    visited.Add(nextOrthogonal);
+                    neighborsOfNextNeighbor.Add(nextOrthogonal);
+                }
+            }
+            neighbors.Add(nextNeighbor, neighborsOfNextNeighbor.ToArray());
+        }
+
+        return neighbors;
+    }
+
+    public static void SetNeighbors(SpatialCoordinate forCoordinate, Dictionary<Vector2Int, Vector2Int[]> neighbors, Dictionary<Vector2Int, SpatialCoordinate> allCoordinates, out float closestWall)
+    {
+        HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
+        List<Vector2Int> frontier = new List<Vector2Int>() { Vector2Int.zero };
+        closestWall = float.MaxValue;
+
+        while (frontier.Count > 0)
+        {
+            Vector2Int currentFrontier = frontier[0];
+            visited.Add(currentFrontier);
+            frontier.RemoveAt(0);
+
+            foreach (Vector2Int neighbor in neighbors[currentFrontier])
+            {
+                Vector2Int resultingCoordinate = currentFrontier + neighbor;
+
+                if (visited.Contains(resultingCoordinate))
+                {
+                    continue;
+                }
+
+                Vector2Int combinedNeighborCoordinate = resultingCoordinate + forCoordinate.BasedOnPosition;
+                float distance = Vector2.Distance(Vector2.zero, (Vector2)neighbor / MapGenerator.COORDINATETOPOSITIONDIVISOR);
+
+                if (allCoordinates.TryGetValue(combinedNeighborCoordinate, out SpatialCoordinate foundNeighbor))
+                {
+                    frontier.Add(neighbor);
+                    forCoordinate.NeighborsToDistances.Add(foundNeighbor, distance);
+                }
+                else
+                {
+                    closestWall = Mathf.Min(closestWall, distance);
+                }
+            }
+        }
+    }
 
     private void OnDrawGizmosSelected()
     {

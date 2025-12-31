@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Transactions;
 using UnityEditor;
 using UnityEngine;
@@ -30,41 +31,47 @@ public class Path
         this.NextWaypoint = destination;
     }
 
-    public Path(Vector2 startingPosition, IEnumerable<SpatialCoordinate> spatialCoordinates)
+    public Path(Vector2 startingPosition, IReadOnlyList<Vector2> spatialCoordinates)
     {
         this.StartingPosition = startingPosition;
         Vector2 previousPosition = startingPosition;
-        foreach (SpatialCoordinate position in spatialCoordinates)
+        foreach (Vector2 position in spatialCoordinates)
         {
-            this.InitialLength += Vector2.Distance(position.WorldPosition, previousPosition);
-            previousPosition = position.WorldPosition;
-            this.Destination = position.WorldPosition;
-            this.PathPoints.Add(position.WorldPosition);
+            this.InitialLength += Vector2.Distance(position, previousPosition);
+            previousPosition = position;
+            this.Destination = position;
+            this.PathPoints.Add(position);
         }
-
         this.NextWaypoint = this.PathPoints[0];
     }
 
-    public Vector2 ApproachWaypointByDistance(Vector2 currentPosition, float byDistance, out float remainingDistance)
+    public Vector2 ApproachWaypointByDistance(Vector2 currentPosition, float byDistance, float closeEnoughToContinue)
     {
-        if (this.IsComplete)
+        Vector2 virtualPosition = currentPosition;
+
+        while (byDistance > 0)
         {
-            remainingDistance = 0;
-            return currentPosition;
+            if (this.IsComplete)
+            {
+                return virtualPosition;
+            }
+
+            float distanceToNextWaypoint = Vector2.Distance(virtualPosition, this.NextWaypoint);
+
+            if (distanceToNextWaypoint <= byDistance || distanceToNextWaypoint <= closeEnoughToContinue)
+            {
+                Vector2 pointTowardsVirtualPositionByGracePeriod = Vector2.MoveTowards(this.NextWaypoint, virtualPosition, closeEnoughToContinue);
+                distanceToNextWaypoint = Vector2.Distance(virtualPosition, pointTowardsVirtualPositionByGracePeriod);
+                byDistance -= distanceToNextWaypoint;
+                virtualPosition = pointTowardsVirtualPositionByGracePeriod;
+                this.Advance();
+                continue;
+            }
+
+            return virtualPosition + (this.NextWaypoint - virtualPosition).normalized * byDistance;
         }
 
-        float distanceToNextWaypoint = Vector2.Distance(currentPosition, this.NextWaypoint);
-
-        if (distanceToNextWaypoint <= byDistance)
-        {
-            remainingDistance = byDistance - distanceToNextWaypoint;
-            Vector2 goTo = NextWaypoint;
-            this.Advance();
-            return goTo;
-        }
-
-        remainingDistance = 0;
-        return currentPosition + (this.NextWaypoint - currentPosition).normalized * byDistance;
+        return virtualPosition;
     }
 
     private void Advance()

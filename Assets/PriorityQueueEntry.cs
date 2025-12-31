@@ -36,7 +36,7 @@ public struct PriorityQueueEntry<T>
         entries.Add(this.Value);
         foreach (PriorityQueueEntry<T> entry in PreviousEntries)
         {
-            entries.Add(entry.Value);
+            entries.Insert(0, entry.Value);
         }
 
         return entries;

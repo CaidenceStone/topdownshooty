@@ -15,19 +15,19 @@ MonoBehaviour:
   WallPF: {fileID: 6736155336947055435, guid: f2ef392171ac06243b92cea6680d0c81, type: 3}
   WallTile: {fileID: -6100500433400396510, guid: 3cf9627c17b1c7f4da6a2b29eed73d71, type: 3}
   WallFillingBufferSize: 5
-  MapWidthMin: 80
+  MapWidthMin: 50
   MapWidthMax: 140
-  MapHeightMin: 80
+  MapHeightMin: 50
   MapHeightMax: 140
-  ExtraWallBuffer: 40
+  ExtraWallBuffer: 20
   StampCount: 15
   CircleStampRadiusMin: 14
   CircleStampRadiusMax: 30
-  LineThicknessMin: 4
-  LineThicknessMax: 8
+  LineThicknessMin: 2
+  LineThicknessMax: 5
   InnerStampMinCount: 0
   InnerStampMaxCount: 10
-  CircleInnerStampRadiusMin: 4
+  CircleInnerStampRadiusMin: 1
   CircleInnerStampRadiusMax: 8
   MinDistanceBetweenStamps: 10
   MaxDistanceBetweenStamps: 40

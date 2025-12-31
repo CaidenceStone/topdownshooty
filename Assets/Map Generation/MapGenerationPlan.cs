@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -25,14 +26,16 @@ public abstract class MapGenerationPlan : ScriptableObject
         }
 
         int positionsCount = positions.Count;
-        List<Vector2Int> positionList = new List<Vector2Int>(positions);
         Vector3Int[] positionsList = new Vector3Int[positionsCount];
         TileBase[] tilesComparativeList = new TileBase[positionsCount];
 
-        for (int ii = 0; ii < positionsCount; ii++)
+        Array.Fill<TileBase>(tilesComparativeList, toPlace);
+
+        int index = 0;
+        foreach (Vector2Int position in positions)
         {
-            positionsList[ii] = (Vector3Int)positionList[ii];
-            tilesComparativeList[ii] = toPlace;
+            positionsList[index] = (Vector3Int)position;
+            index++;
         }
 
         toWriteOn.SetTiles(positionsList, tilesComparativeList);

@@ -86,7 +86,7 @@ public class MapGenerator : MonoBehaviour
      * so they're redundant and messy
      * */
 
-    public static Vector2 GetRandomNegativeSpacePointAtDistanceRangeFromPoints(List<MapChunk> chunks, IReadOnlyList<Vector2> near, float minDistance, float maxDistance, float minimumRoomliness)
+    public static Vector2 GetRandomNegativeSpacePointAtDistanceRangeFromPoints(List<MapChunk> chunks, HashSet<Vector2> near, float minDistance, float maxDistance, float minimumRoomliness)
     {
         if (near.Count == 0)
         {
@@ -159,7 +159,7 @@ public class MapGenerator : MonoBehaviour
         return randomSpace;
     }
 
-    public static Vector2Int GetRandomNegativeSpacePointAtDistanceRangeFromPoint(Vector2Int near, IReadOnlyList<Vector2Int> subset, float minDistance, float maxDistance)
+    public static Vector2Int GetRandomNegativeSpacePointAtDistanceRangeFromPoint(Vector2Int near, HashSet<Vector2Int> subset, float minDistance, float maxDistance)
     {
         if (subset.Count == 0)
         {
@@ -171,7 +171,17 @@ public class MapGenerator : MonoBehaviour
         for (int ii = 0; ii < GETRANDOMNEARBYMAXITERATIONS; ii++)
         {
             int randomIndex = UnityEngine.Random.Range(0, subset.Count);
-            randomSpace = subset[randomIndex];
+
+            foreach (Vector2Int vector in subset)
+            {
+                randomIndex--;
+                if (randomIndex < 0)
+                {
+                    randomSpace = vector;
+                    break;
+                }
+            }
+
             float distance = Vector2.Distance(randomSpace, near);
 
             if (distance > minDistance && distance < maxDistance)

@@ -158,7 +158,7 @@ public class SingleLevelDirector : MonoBehaviour
 
     public void Begin()
     {
-        IReadOnlyList<Vector2> currentCharacterPositions = StaticLevelDirector.CurrentLevelDirector.GetCharacterPositions();
+        HashSet<Vector2> currentCharacterPositions = StaticLevelDirector.CurrentLevelDirector.GetCharacterPositions();
 
         Debug.Log($"Spawning {this.enemySpawnSettings.EnemyCountToSpawn} enemies");
         for (int ii = 0; ii < this.enemySpawnSettings.EnemyCountToSpawn; ii++)
@@ -184,13 +184,13 @@ public class SingleLevelDirector : MonoBehaviour
         StaticLevelDirector.BeginLevel();
     }
 
-    public IReadOnlyList<Vector2> GetCharacterPositions()
+    public HashSet<Vector2> GetCharacterPositions()
     {
-        List<Vector2> positions = new List<Vector2>();
+        HashSet<Vector2> positions = new HashSet<Vector2>();
 
         foreach (TDSCharacterController character in AlivePlayers)
         {
-            positions.Add(character.Body.position);
+            positions.Add(character.LastStoodVector2);
         }
 
         return positions;

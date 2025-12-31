@@ -239,9 +239,12 @@ public class SpatialReasoningCalculator : MonoBehaviour
         return Vector2.Distance(positionToCheck, linePointA + precalculatedTrustedLineDirection * t);
     }
 
-    public static IEnumerable<SpatialCoordinate> FindLargestIsland(IReadOnlyList<SpatialCoordinate> negativeSpaceList, out List<SpatialCoordinate> wallsToRefill, out int largestIslandSize)
+    public static IEnumerable<SpatialCoordinate> FindLargestIsland(MapBakingResult baking, out List<SpatialCoordinate> wallsToRefill, out int largestIslandSize)
     {
-        if (negativeSpaceList.Count == 0)
+        List<SpatialCoordinate> allCoordinates = baking.AllCoordinates;
+        Debug.Log($"Finding largest island out of {allCoordinates.Count}");
+
+        if (allCoordinates.Count == 0)
         {
             Debug.Log($"The negative space list is empty, nothing to refill.");
             wallsToRefill = new List<SpatialCoordinate>();
@@ -249,24 +252,24 @@ public class SpatialReasoningCalculator : MonoBehaviour
             return new List<SpatialCoordinate>();
         }
 
-        Debug.Log($"Asked to parse {negativeSpaceList.Count} negative spaces into islands");
+        // Debug.Log($"Asked to parse {negativeSpaceList.Count} negative spaces into islands");
 
-        wallsToRefill = new List<SpatialCoordinate>(negativeSpaceList.Count);
+        wallsToRefill = new List<SpatialCoordinate>(allCoordinates.Count);
         List<SpatialCoordinate[]> islands = new List<SpatialCoordinate[]>();
         List<int> islandSizes = new List<int>();
 
-        HashSet<SpatialCoordinate> remainingCoordinatesToCheck = new HashSet<SpatialCoordinate>(negativeSpaceList);
-        SpatialCoordinate placeToStart = negativeSpaceList[0];
+        HashSet<SpatialCoordinate> remainingCoordinatesToCheck = new HashSet<SpatialCoordinate>(allCoordinates);
+        SpatialCoordinate placeToStart = allCoordinates[0];
         while (remainingCoordinatesToCheck.Count > 0)
         {
             placeToStart = remainingCoordinatesToCheck.First();
             remainingCoordinatesToCheck.Remove(placeToStart);
 
             int currentCoordinateIndex = 1;
-            SpatialCoordinate[] thisIslandCoordinates = new SpatialCoordinate[negativeSpaceList.Count];
+            SpatialCoordinate[] thisIslandCoordinates = new SpatialCoordinate[allCoordinates.Count];
             thisIslandCoordinates[0] = placeToStart;
 
-            Queue<SpatialCoordinate> nextCheckList = new Queue<SpatialCoordinate>(negativeSpaceList.Count);
+            Queue<SpatialCoordinate> nextCheckList = new Queue<SpatialCoordinate>(allCoordinates.Count);
             nextCheckList.Enqueue(placeToStart);
 
             do
@@ -293,7 +296,7 @@ public class SpatialReasoningCalculator : MonoBehaviour
 
         if (islands.Count == 0)
         {
-            Debug.Log($"Couldn't find any islands in the negative space of {negativeSpaceList.Count}");
+            Debug.Log($"Couldn't find any islands in the negative space of {allCoordinates.Count}");
             largestIslandSize = 0;
             return new List<SpatialCoordinate>();
         }
@@ -327,14 +330,54 @@ public class SpatialReasoningCalculator : MonoBehaviour
         return islands[largestIslandIndex].Take(largestIslandSize);
     }
 
-    public static List<SpatialCoordinate> LimitTo(IReadOnlyList<SpatialCoordinate> coordinatesToLimit, HashSet<SpatialCoordinate> limitingSubset, HashSet<SpatialCoordinate> inCoordinatesWithRoom, out IReadOnlyList<SpatialCoordinate> outCoordinatesWithRoom)
+    public static List<SpatialCoordinate> RemoveNarrowSpaces(IReadOnlyList<SpatialCoordinate> toRestrict, float roomliness, out List<SpatialCoordinate> wallsToRefill)
     {
-        List<SpatialCoordinate> limitedTo = new List<SpatialCoordinate>(limitingSubset.Count);
-        List<SpatialCoordinate> putOutCoordinatesWithRoom = new List<SpatialCoordinate>(limitingSubset.Count);
-        int positionsToConsiderLength = coordinatesToLimit.Count;
-        for (int ii = 0; ii < positionsToConsiderLength; ii++)
+        List<SpatialCoordinate> screenedCoordinates = new List<SpatialCoordinate>();
+        wallsToRefill = new List<SpatialCoordinate>();
+
+        for (int ii = 0; ii < toRestrict.Count; ii++)
         {
-            SpatialCoordinate coordinate = coordinatesToLimit[ii];
+            if (toRestrict[ii].ClosestWallInWorldSpace >= roomliness)
+            {
+                screenedCoordinates.Add(toRestrict[ii]);
+            }
+            else
+            {
+                wallsToRefill.Add(toRestrict[ii]);
+            }
+        }
+
+        return screenedCoordinates;
+    }
+
+    public static List<SpatialCoordinate> RemoveNarrowSpaces(MapBakingResult toRestrict, int requiredNeighborsForOpenness, out List<SpatialCoordinate> wallsToRefill)
+    {
+        List<SpatialCoordinate> screenedCoordinates = new List<SpatialCoordinate>();
+        wallsToRefill = new List<SpatialCoordinate>();
+
+        for (int ii = 0; ii < toRestrict.AllCoordinates.Count; ii++)
+        {
+            SpatialCoordinate thisCoordinate = toRestrict.AllCoordinates[ii];
+            if (thisCoordinate.NeighborsToDistances.Count >= requiredNeighborsForOpenness)
+            {
+                screenedCoordinates.Add(thisCoordinate);
+            }
+            else
+            {
+                wallsToRefill.Add(thisCoordinate);
+            }
+        }
+
+        return screenedCoordinates;
+    }
+
+    public static void LimitTo(MapBakingResult bakedResults, HashSet<SpatialCoordinate> limitingSubset)
+    {
+        int limitedCoordinates = 0;
+        int positionsToConsiderLength = bakedResults.AllCoordinates.Count;
+        for (int ii = positionsToConsiderLength - 1; ii >= 0; ii--)
+        {
+            SpatialCoordinate coordinate = bakedResults.AllCoordinates[ii];
             if (!limitingSubset.Contains(coordinate))
             {
                 foreach (SpatialCoordinate neighboringCoordinate in coordinate.NeighborsToDistances.Keys)
@@ -342,19 +385,23 @@ public class SpatialReasoningCalculator : MonoBehaviour
                     neighboringCoordinate.NeighborsToDistances.Remove(coordinate);
                 }
                 coordinate.NeighborsToDistances.Clear();
-            }
-            else
-            {
-                limitedTo.Add(coordinate);
+                bakedResults.AllCoordinates.RemoveAt(ii);
+                bakedResults.CoordinatesWithLegroom.Remove(coordinate);
 
-                if (inCoordinatesWithRoom.Contains(coordinate))
+                foreach (MapChunk curChunk in bakedResults.Chunks)
                 {
-                    putOutCoordinatesWithRoom.Add(coordinate);
+                    curChunk.CoordinatesInChunk.Remove(coordinate);
+                    curChunk.CoordinatesInChunkWithLegRoom.Remove(coordinate);
                 }
+
+                limitedCoordinates++;
             }
         }
-        outCoordinatesWithRoom = putOutCoordinatesWithRoom;
-        return limitedTo;
+
+        if (limitedCoordinates > 0)
+        {
+            Debug.Log($"Limited away {limitedCoordinates} coordinates");
+        }
     }
 
     public static bool IsPointCloseEnoughToLine(Vector2 position, Vector2 linePointA, Vector2 linePointB, Vector2 precalculatedTrustedLineDirection, float threshold, float precalculatedLineLength)
@@ -645,6 +692,40 @@ public class SpatialReasoningCalculator : MonoBehaviour
         return new MapBakingResult(everyCoordinate, foundCoordinatesWithRoom, chunks);
     }
 
+    public static void RebakeCoordinates(MapBakingResult toRebake, float distanceForRoomliness)
+    {
+        Dictionary<Vector2Int, SpatialCoordinate> coordinateDictionary = new Dictionary<Vector2Int, SpatialCoordinate>();
+        for (int chunkIndex = 0; chunkIndex < toRebake.Chunks.Count; chunkIndex++)
+        {
+            MapChunk thisChunk = toRebake.Chunks[chunkIndex];
+            for (int coordinateIndex = 0; coordinateIndex < thisChunk.CoordinatesInChunk.Count; coordinateIndex++)
+            {
+                SpatialCoordinate thisCoordinate = thisChunk.CoordinatesInChunk[coordinateIndex];
+                coordinateDictionary.Add(thisCoordinate.BasedOnPosition, thisCoordinate);
+            }
+        }
+
+        Dictionary<Vector2Int, Vector2Int[]> neighborCheckTree = BuildNeighborPossiblePositions(CurrentInstance.orthogonalNeighbors, MAXIMUMNEIGHBORDISTANCE);
+
+        for (int chunkIndex = 0; chunkIndex < toRebake.Chunks.Count; chunkIndex++)
+        {
+            MapChunk thisChunk = toRebake.Chunks[chunkIndex];
+            thisChunk.CoordinatesInChunkWithLegRoom.Clear();
+
+            for (int coordinateIndex = 0; coordinateIndex < thisChunk.CoordinatesInChunk.Count; coordinateIndex++)
+            {
+                SpatialCoordinate coordinate = thisChunk.CoordinatesInChunk[coordinateIndex];
+                SetNeighbors(coordinate, neighborCheckTree, coordinateDictionary, out float closestWall);
+                coordinate.ClosestWallInWorldSpace = closestWall;
+
+                if (closestWall >= distanceForRoomliness)
+                {
+                    thisChunk.CoordinatesInChunkWithLegRoom.Add(coordinate);
+                }
+            }
+        }
+    }
+
     #region Old Synchronous Methods
 
     [Obsolete]
@@ -802,6 +883,7 @@ public class SpatialReasoningCalculator : MonoBehaviour
 
     public static void SetNeighbors(SpatialCoordinate forCoordinate, Dictionary<Vector2Int, Vector2Int[]> neighbors, Dictionary<Vector2Int, SpatialCoordinate> allCoordinates, out float closestWall)
     {
+        forCoordinate.NeighborsToDistances.Clear();
         HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
         List<Vector2Int> frontier = new List<Vector2Int>() { Vector2Int.zero };
         closestWall = float.MaxValue;
@@ -835,6 +917,8 @@ public class SpatialReasoningCalculator : MonoBehaviour
                 }
             }
         }
+
+        forCoordinate.ClosestWallInWorldSpace = closestWall;
     }
 
     private void OnDrawGizmosSelected()

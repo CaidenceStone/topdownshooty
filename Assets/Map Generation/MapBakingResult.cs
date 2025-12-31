@@ -3,11 +3,11 @@ using UnityEngine;
 
 public struct MapBakingResult
 {
-    public readonly IReadOnlyList<SpatialCoordinate> AllCoordinates;
-    public readonly IReadOnlyList<SpatialCoordinate> CoordinatesWithLegroom;
-    public readonly IReadOnlyList<MapChunk> Chunks;
+    public readonly List<SpatialCoordinate> AllCoordinates;
+    public readonly List<SpatialCoordinate> CoordinatesWithLegroom;
+    public readonly List<MapChunk> Chunks;
 
-    public MapBakingResult(IReadOnlyList<SpatialCoordinate> allCoordinates, IReadOnlyList<SpatialCoordinate> coordinatesWithLegroom, IReadOnlyList<MapChunk> chunks)
+    public MapBakingResult(List<SpatialCoordinate> allCoordinates, List<SpatialCoordinate> coordinatesWithLegroom, List<MapChunk> chunks)
     {
         this.AllCoordinates = allCoordinates;
         this.CoordinatesWithLegroom = coordinatesWithLegroom;

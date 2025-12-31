@@ -32,6 +32,11 @@ public class MapGenerator : MonoBehaviour
 
     public static bool MapReady { get; private set; } = false;
 
+    [SerializeField]
+    public bool UseSeed = false;
+    [SerializeField]
+    public int Seed = 0;
+
     private void Awake()
     {
         MostLeft = int.MaxValue;
@@ -42,6 +47,11 @@ public class MapGenerator : MonoBehaviour
 
     public async Task GenerateWorld()
     {
+        if (this.UseSeed)
+        {
+            Random.InitState(Seed);
+        }
+
         MapReady = false;
 
         await this.plan.GenerateMapAsync(this.transform, this.MyTilemap);
@@ -116,6 +126,7 @@ public class MapGenerator : MonoBehaviour
                     {
                         break;
                     }
+
                     chunkCoordinateCandidates.Add(coordinate);
                 }
             }

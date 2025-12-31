@@ -12,7 +12,8 @@ using UnityEngine.Tilemaps;
 [CreateAssetMenu(fileName = "MapGenerator", menuName = "Map Generation/Geometric Stamp Map Generation Plan", order = 1)]
 public class GeometricStampMapGenerationPlan : MapGenerationPlan
 {
-    public const float SUFFICIENTDISTANCEFROMWALLFORROOMLINESS = .2f;
+    public const float SUFFICIENTDISTANCEFROMWALLFORROOMLINESS = .8f;
+    public const int OPENNEIGHBORSFORROOMLINESS = 4;
 
     public int WallFillingBufferSize = 5;
 
@@ -93,7 +94,7 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
 
             // Then make a stamp inside these affected areas, reintroducing some parts
             int randomInnerStamp = UnityEngine.Random.Range(InnerStampMinCount, InnerStampMaxCount);
-            Debug.Log($"Rolled {randomInnerStamp} random inner stamps");
+            // Debug.Log($"Rolled {randomInnerStamp} random inner stamps");
             for (int innerStampIndex = 0; innerStampIndex < randomInnerStamp; innerStampIndex++)
             {
                 randomRadius = UnityEngine.Random.Range(CircleInnerStampRadiusMin, CircleInnerStampRadiusMax);
@@ -105,7 +106,7 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
                     break;
                 }
 
-                Debug.Log($"Inner stamp iteration {innerStampIndex} is removing {wallsToRetain.Count} from the removal");
+                // Debug.Log($"Inner stamp iteration {innerStampIndex} is removing {wallsToRetain.Count} from the removal");
 
                 foreach (Vector2Int wallToRetain in wallsToRetain)
                 {
@@ -118,7 +119,7 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
                 continue;
             }
 
-            Debug.Log($"Stamp is removing {wallsToRemove.Count} / {moldableWalls.Count}");
+            // Debug.Log($"Stamp is removing {wallsToRemove.Count} / {moldableWalls.Count}");
 
             for (int ii = wallsToRemove.Count - 1; ii >= 0; ii--)
             {
@@ -178,6 +179,7 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
 
         MapBakingResult bakedCoordinates = await SpatialReasoningCalculator.BakeNeighborsGridAsync(negativeSpaceNativeArray, negativeSpace.Count, SUFFICIENTDISTANCEFROMWALLFORROOMLINESS);
         negativeSpaceNativeArray.Dispose();
+        SpatialReasoningCalculator.SetPositions(bakedCoordinates.Chunks);
 
         if (!Application.isPlaying)
         {
@@ -185,23 +187,63 @@ public class GeometricStampMapGenerationPlan : MapGenerationPlan
         }
 
         List<SpatialCoordinate> wallsToRefill = new List<SpatialCoordinate>();
-        Debug.Log($"Finding largest island out of {negativeSpace.Count}");
-
-        IEnumerable<SpatialCoordinate> largestIsland = SpatialReasoningCalculator.FindLargestIsland(bakedCoordinates.AllCoordinates, out wallsToRefill, out int largestIslandSize);
-
-        Debug.Log($"Limiting negative space to {largestIslandSize}");
-        List<SpatialCoordinate> limitedCoordinates = SpatialReasoningCalculator.LimitTo(bakedCoordinates.AllCoordinates, largestIsland.ToHashSet(), bakedCoordinates.CoordinatesWithLegroom.ToHashSet(), out IReadOnlyList<SpatialCoordinate> newCoordinatesWithRoom);
-        SpatialReasoningCalculator.SetPositions(bakedCoordinates.Chunks);
-
-        foreach (SpatialCoordinate refillWalls in wallsToRefill)
+        bool trimmed = false;
+        do
         {
-            walls.Add(refillWalls.BasedOnPosition);
-        }
+            trimmed = false;
+            int coordinatesLength = bakedCoordinates.AllCoordinates.Count;
+
+            IEnumerable<SpatialCoordinate> largestIsland = SpatialReasoningCalculator.FindLargestIsland(bakedCoordinates, out wallsToRefill, out int largestIslandSize);
+
+            if (wallsToRefill.Count > 0)
+            {
+                Debug.Log($"Refilling {wallsToRefill.Count} after identifying largest islands");
+                foreach (SpatialCoordinate refillWalls in wallsToRefill)
+                {
+                    walls.Add(refillWalls.BasedOnPosition);
+                }
+
+                Debug.Log($"Limiting negative space to {largestIslandSize}");
+                SpatialReasoningCalculator.LimitTo(bakedCoordinates, largestIsland.ToHashSet());
+                trimmed = true;
+
+                foreach (SpatialCoordinate refillWalls in wallsToRefill)
+                {
+                    walls.Add(refillWalls.BasedOnPosition);
+                }
+
+                SpatialReasoningCalculator.RebakeCoordinates(bakedCoordinates, GeometricStampMapGenerationPlan.SUFFICIENTDISTANCEFROMWALLFORROOMLINESS);
+                SpatialReasoningCalculator.SetPositions(bakedCoordinates.Chunks);
+            }
+
+            IReadOnlyList<SpatialCoordinate> remainingCoordinates = SpatialReasoningCalculator.RemoveNarrowSpaces(bakedCoordinates, GeometricStampMapGenerationPlan.OPENNEIGHBORSFORROOMLINESS, out wallsToRefill);
+
+            if (wallsToRefill.Count > 0)
+            {
+                Debug.Log($"Refilling {wallsToRefill.Count} after removing narrow areas");
+                foreach (SpatialCoordinate refillWalls in wallsToRefill)
+                {
+                    walls.Add(refillWalls.BasedOnPosition);
+                }
+
+                Debug.Log($"Limiting negative space to {remainingCoordinates.Count}");
+                SpatialReasoningCalculator.LimitTo(bakedCoordinates, remainingCoordinates.ToHashSet());
+                trimmed = true;
+
+                foreach (SpatialCoordinate refillWalls in wallsToRefill)
+                {
+                    walls.Add(refillWalls.BasedOnPosition);
+                }
+
+                SpatialReasoningCalculator.RebakeCoordinates(bakedCoordinates, GeometricStampMapGenerationPlan.SUFFICIENTDISTANCEFROMWALLFORROOMLINESS);
+                SpatialReasoningCalculator.SetPositions(bakedCoordinates.Chunks);
+            }
+        } while (trimmed);
 
         onMap.ClearAllTiles();
         this.WriteTilemap(onMap, walls, WallTilebase);
         // await this.SpawnPF(this.WallPF, walls, root);
-        return limitedCoordinates;
+        return bakedCoordinates.AllCoordinates;
     }
 
     protected virtual IReadOnlyList<Vector2Int> StampCircle(IReadOnlyList<Vector2Int> coordinates, out Vector2Int center, float radius, Vector2Int? previousLinkPosition, float minDistance, float maxDistance)

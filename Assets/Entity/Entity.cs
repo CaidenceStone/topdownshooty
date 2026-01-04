@@ -6,31 +6,20 @@ using UnityEditor.Build;
 using UnityEngine;
 using UnityEngine.Assertions.Must;
 
-public class Entity : MonoBehaviour
+public class Entity : Mob
 {
     public const float TIMETOIGNORECOLLIDERSAFTERHURTBOX = .2f;
-    public const int MAXIMUMSLIDEITERATIONS = 10;
-    public const float PLANCKCOLLISIONDISTANCE = .01f;
 
     public SpatialCoordinate LastStoodCoordinate { get; set; }
     public Vector2 LastStoodVector2 { get; set; }
 
-
-    [SerializeReference]
-    public Rigidbody2D Body;
     [SerializeField]
     protected LayerMask projectileMask;
-    [SerializeField]
-    protected LayerMask environmentMask;
     [SerializeField]
     public double MaximumHP = 5.0;
     [SerializeField]
     protected PersonalHealthCanvas ownPersonalHealthCanvas = null;
     public double CurrentHP { get; protected set; }
-
-    [SerializeField]
-    public Faction MyFaction;
-    public bool ShouldDestroy { get; set; } = false;
 
     [SerializeField]
     private float damageFlickerTime = .2f;
@@ -104,11 +93,12 @@ public class Entity : MonoBehaviour
         this.InputUpdates();
     }
 
-    protected void FixedUpdate()
+    protected override void FixedUpdate()
     {
-        if (this.ShouldDestroy)
+        base.FixedUpdate();
+
+        if (this.ScheduledForDestruction)
         {
-            this.HandleDestroy();
             return;
         }
 
@@ -181,15 +171,14 @@ public class Entity : MonoBehaviour
             this.curHitStunTime = projectile.HitStunTime;
         }
 
-        this.RegisterImpactEvent(new ImpactEvent(projectile.FiringAngle, projectile.ImpactTime, projectile.Impact, projectile.ImpactOverTime));
+        this.RegisterImpactEvent(new ImpactEvent(projectile.VelocityPerSecond.normalized, projectile.ImpactTime, projectile.Impact, projectile.ImpactOverTime));
 
-        projectile.SetShouldDestroy();
-    }
+        Physics2D.IgnoreCollision(collision.collider, collision.otherCollider);
 
-    public virtual void MarkForDestruction()
-    {
-        this.ShouldDestroy = true;
-        this.ownPersonalHealthCanvas.Clear();
+        if (projectile.DiesOnImpact)
+        {
+            projectile.ScheduleForDestruction();
+        }
     }
 
     public void TakeDamage(double damageAmount)
@@ -199,7 +188,7 @@ public class Entity : MonoBehaviour
 
         if (this.CurrentHP <= 0)
         {
-            this.MarkForDestruction();
+            this.ScheduleForDestruction();
         }
         else
         {
@@ -245,15 +234,14 @@ public class Entity : MonoBehaviour
 
     void HandleImpactEvents()
     {
+        float fixedTimeStep = Time.fixedDeltaTime;
         for (int ii = this.processingImpactEvents.Count - 1; ii >= 0; ii--)
         {
             ImpactEvent thisEvent = this.processingImpactEvents[ii];
-            thisEvent.RemainingTime -= Time.deltaTime;
+            thisEvent.RemainingTime -= fixedTimeStep;
 
             float currentImpact = thisEvent.GetImpactAtCurrentTime();
-            float currentImpactAtTime = thisEvent.Impact * Time.deltaTime;
-
-            this.MoveEntity(thisEvent.OriginalDirection * currentImpactAtTime);
+            this.AddForceToVelocity(thisEvent.OriginalDirection.normalized * currentImpact, fixedTimeStep);
 
             if (thisEvent.RemainingTime < 0)
             {
@@ -271,94 +259,6 @@ public class Entity : MonoBehaviour
     {
         StaticLevelDirector.CurrentLevelDirector.UnregisterEntity(this);
         Destroy(this.gameObject);
-    }
-
-    protected virtual void MoveEntity(Vector2 movement)
-    {
-        RaycastHit2D[] hits = new RaycastHit2D[1];
-
-        // Sub-function that splits movement in to separate horizontal and vertical axes
-        // Returns the remaining amount of available movement
-        bool MoveEntitySlideIteration(Vector2 iterationMovement, out Vector2 remainingMovement)
-        {
-            bool anyChanged = false;
-            remainingMovement = iterationMovement;
-
-            if (!Mathf.Approximately(iterationMovement.x, 0) && SlideAxis(Vector2.right, iterationMovement.x, out float remainingDistance))
-            {
-                remainingMovement.x = remainingDistance;
-                anyChanged = true;
-            }
-            
-            if (!Mathf.Approximately(iterationMovement.y, 0) && SlideAxis(Vector2.up, iterationMovement.y, out remainingDistance))
-            {
-                remainingMovement.y = remainingDistance;
-                anyChanged = true;
-            }
-
-            return anyChanged;
-        }
-
-        bool SlideAxis(Vector2 axis, float distance, out float remainingDistance)
-        {
-            if (Mathf.Approximately(distance, 0))
-            {
-                remainingDistance = 0;
-                return false;
-            }
-
-            remainingDistance = distance;            
-            if (this.Body.Cast(new Vector2(axis.x * Mathf.Sign(distance), axis.y * Mathf.Sign(distance)), new ContactFilter2D() { layerMask = this.environmentMask, useLayerMask = true }, hits, Mathf.Abs(distance)) > 0)
-            {
-                float posDifference = hits[0].distance;
-
-                if (posDifference > PLANCKCOLLISIONDISTANCE)
-                {
-                    remainingDistance = Mathf.MoveTowards(distance, 0f, posDifference);
-                    this.Body.position += axis * Mathf.Sign(distance) * (Mathf.MoveTowards(posDifference, 0, PLANCKCOLLISIONDISTANCE));
-
-                    return true;
-                }
-
-                return false;
-            }
-            else
-            {
-                this.Body.position += axis * distance;
-                remainingDistance = 0;
-                return true;
-            }
-        }
-
-        if (this.Body.Cast(movement, new ContactFilter2D() { layerMask = this.environmentMask, useLayerMask = true }, hits, movement.magnitude) > 0)
-        {
-            Vector2 slideRemaining = movement;
-            for (int ii = 0; ii < MAXIMUMSLIDEITERATIONS; ii++)
-            {
-                Vector2 initialRemainingSlide = slideRemaining;
-                if (!MoveEntitySlideIteration(initialRemainingSlide, out slideRemaining))
-                {
-                    break;
-                }
-                if (Mathf.Approximately(slideRemaining.x, 0) && Mathf.Approximately(slideRemaining.y, 0))
-                {
-                    break;
-                }
-            }
-            return;
-        }
-        else
-        {
-            // Otherwise, move the full distance
-            this.Body.position += movement;
-        }
-
-        Vector2Int roundedCoordinate = new Vector2Int(Mathf.FloorToInt(this.Body.position.x * MapGenerator.COORDINATETOPOSITIONDIVISOR), Mathf.FloorToInt(this.Body.position.y * MapGenerator.COORDINATETOPOSITIONDIVISOR));
-        if (SpatialReasoningCalculator.CurrentInstance.Positions.TryGetValue(roundedCoordinate, out SpatialCoordinate onTile))
-        {
-            this.LastStoodCoordinate = onTile;
-            this.LastStoodVector2 = this.Body.position;
-        }
     }
 
     protected virtual void InputUpdates()

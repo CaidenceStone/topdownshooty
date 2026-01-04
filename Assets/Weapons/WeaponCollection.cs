@@ -25,7 +25,7 @@ public class WeaponCollection : MonoBehaviour
         Debug.Log($"Initializing weapon collection with {this.Weapons.Count} weapons");
         foreach (Weapon curWeapon in this.Weapons)
         {
-            curWeapon.InitializeWeapon(this.entity.MyFaction);
+            curWeapon.InitializeWeapon(this.entity.MyFaction, owningEntity);
             curWeapon.SetIsInWorld(false);
 
             // Create a prefab that will be hidden away as don't be destroyed
@@ -53,7 +53,7 @@ public class WeaponCollection : MonoBehaviour
         foreach (Weapon curWeapon in this.Data.WeaponPFs)
         {
             Weapon newWeapon = Instantiate(curWeapon, this.transform, false);
-            newWeapon.InitializeWeapon(this.entity.MyFaction);
+            newWeapon.InitializeWeapon(this.entity.MyFaction, this.entity);
             newWeapon.SetIsInWorld(false);
             this.Weapons.Add(newWeapon);
             newWeapon.gameObject.SetActive(true);
@@ -123,7 +123,7 @@ public class WeaponCollection : MonoBehaviour
         toAdd.SetIsInWorld(false);
         toAdd.transform.SetParent(this.transform, false);
         toAdd.transform.localPosition = Vector3.zero;
-        toAdd.InitializeWeapon(this.entity.MyFaction);
+        toAdd.InitializeWeapon(this.entity.MyFaction, this.entity);
         toAdd.TimeBetweenShots = Mathf.Lerp(toAdd.TimeBetweenShots, 0, this.entity.Modifiers.ReloadSpeedPercentageReductionModifier);
         this.OnChangedToWeapon?.Invoke(this.GetCurrentWeapon());
     }

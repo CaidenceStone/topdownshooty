@@ -22,6 +22,12 @@ public class ProjectileFiringProjectile : Projectile
     [SerializeField]
     private bool dieAfterFiring = false;
 
+    [SerializeField]
+    private float minAngleForSubProjectile = 0;
+
+    [SerializeField]
+    private float maxAngleForSubProjectile = 0;
+
     private void Awake()
     {
         this.curTimeBetweenFiring = this.timeBetweenFiring;
@@ -36,17 +42,24 @@ public class ProjectileFiringProjectile : Projectile
 
             for (int ii = 0; ii < subProjectilesToFire; ii++)
             {
-                Vector2 firingDirection = (Random.insideUnitCircle.normalized).normalized;
+                float progress = this.currentRotationModifier +
+                    Mathf.Lerp(this.minAngleForSubProjectile, this.maxAngleForSubProjectile, Mathf.InverseLerp(0, this.subProjectilesToFire, ii)) * Mathf.Deg2Rad;
+                Vector2 baseFiringDirection = this.VelocityPerSecond.normalized;
+                Vector2 firingDirectionWithDirectionality = new Vector2(
+                    baseFiringDirection.x * Mathf.Cos(progress) - baseFiringDirection.y * Mathf.Sin(progress),
+                    baseFiringDirection.x * Mathf.Sin(progress) + baseFiringDirection.y * Mathf.Cos(progress));
+
                 Projectile newProjectile = Instantiate(this.subProjectile);
                 newProjectile.transform.position = this.transform.position;
 
                 float projectileSpeed = Mathf.Lerp(this.subProjectileMinimumMovementSpeed, this.subProjectileMaximumMovementSpeed, Random.Range(0f, 1f));
-                newProjectile.StartProjectile(firingDirection, this.MyFaction, projectileSpeed);
-            }
+                newProjectile.StartProjectile(firingDirectionWithDirectionality, this.MyFaction, projectileSpeed);
+                newProjectile.SetVelocity(firingDirectionWithDirectionality * projectileSpeed);
 
-            if (this.dieAfterFiring)
-            {
-                this.SetShouldDestroy();
+                if (this.dieAfterFiring)
+                {
+                    this.ScheduleForDestruction();
+                }
             }
         }
 

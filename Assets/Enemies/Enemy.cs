@@ -23,7 +23,7 @@ public class Enemy : Entity
     private float minDesiredDistanceFromPlayer = 5f;
 
     /// <summary>
-    /// When trying to determine where to stand, try to stand no mor ethan this far away.
+    /// When trying to determine where to stand, try to stand no more than this far away.
     /// </summary>
     [SerializeField]
     private float maxDesiredDistanceFromPlayer = 10f;
@@ -43,7 +43,7 @@ public class Enemy : Entity
     {
         base.BehaviourUpdate();
 
-        if (this.primaryTarget == null || this.primaryTarget.ShouldDestroy)
+        if (this.primaryTarget == null || this.primaryTarget.ScheduledForDestruction)
         {
             return;
         }
@@ -51,7 +51,7 @@ public class Enemy : Entity
         if (triesToPath && this.currentPath != null && !this.currentPath.IsComplete)
         {
             Vector2 destination = this.currentPath.ApproachWaypointByDistance(this.Body.position, this.movementSpeedPerSecond * Time.deltaTime, CLOSEENOUGHTOCOORDINATEPATHINGPOINTTOGOTONEXT);
-            this.MoveEntity(destination - this.Body.position);
+            this.SetVelocity(destination - this.Body.position);
         }
     }
 
@@ -70,7 +70,7 @@ public class Enemy : Entity
         float? closestDistance = null;
         foreach (TDSCharacterController controller in StaticLevelDirector.CurrentLevelDirector.AlivePlayers)
         {
-            if (controller.ShouldDestroy)
+            if (controller.ScheduledForDestruction)
             {
                 continue;
             }
@@ -83,7 +83,7 @@ public class Enemy : Entity
             }
         }
 
-        if (closestCharacter == null || closestCharacter.ShouldDestroy)
+        if (closestCharacter == null || closestCharacter.ScheduledForDestruction)
         {
             primaryTarget = null;
             return;

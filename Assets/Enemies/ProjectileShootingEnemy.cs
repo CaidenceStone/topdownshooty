@@ -19,7 +19,7 @@ public class ProjectileShootingEnemy : Enemy
     {
         this.ownWeapon.TimeBetweenShots = Mathf.Lerp(this.ownWeapon.TimeBetweenShots, 0, this.Modifiers.ReloadSpeedPercentageReductionModifier);
         base.Start();
-        this.ownWeapon.InitializeWeapon(this.MyFaction);
+        this.ownWeapon.InitializeWeapon(this.MyFaction, this);
     }
 
     protected override void TickDownTimers()
@@ -32,7 +32,7 @@ public class ProjectileShootingEnemy : Enemy
     {
         base.BehaviourUpdate();
 
-        if (this.primaryTarget == null || this.primaryTarget.ShouldDestroy)
+        if (this.primaryTarget == null || this.primaryTarget.ScheduledForDestruction)
         {
             return;
         }

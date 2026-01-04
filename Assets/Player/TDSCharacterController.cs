@@ -10,8 +10,6 @@ using UnityEngine.UIElements;
 public class TDSCharacterController : Entity
 {
     [SerializeReference]
-    private Transform rotationPoint;
-    [SerializeReference]
     private Transform firingPoint;
     [SerializeField]
     private float moveSpeedPerSecond = 5f;
@@ -40,6 +38,11 @@ public class TDSCharacterController : Entity
     private LayerMask pickupLayerMask;
     [SerializeField]
     private LayerMask enemyHurtBoxMask;
+
+    [SerializeField]
+    private float influenceForMovementPerSecond = 10f;
+    [SerializeField]
+    private float influenceTowardsStillnessPerSecond = 30f;
 
     protected override void Start()
     {
@@ -112,8 +115,12 @@ public class TDSCharacterController : Entity
     {
         if (currentMoveInput.HasValue)
         {
-            Vector2 distanceMoving = Vector2.ClampMagnitude(this.currentMoveInput.Value, 1f) * this.moveSpeedPerSecond * Time.deltaTime;
-            this.MoveEntity(distanceMoving);
+            Vector2 distanceMoving = Vector2.ClampMagnitude(this.currentMoveInput.Value, 1f) * this.moveSpeedPerSecond;
+            this.InfluenceVelocityTowards(distanceMoving, this.influenceForMovementPerSecond);
+        }
+        else
+        {
+            this.InfluenceVelocityTowards(Vector2.zero, this.influenceTowardsStillnessPerSecond);
         }
     }
 
@@ -170,13 +177,6 @@ public class TDSCharacterController : Entity
     void LookDetected(InputAction.CallbackContext context)
     {
         this.useMousePosition = false;
-    }
-
-    public override void MarkForDestruction()
-    {
-        Debug.Log($"Player defeated");
-        this.ShouldDestroy = true;
-        this.gameObject.SetActive(false);
     }
 
     protected override void HandleDestroy()

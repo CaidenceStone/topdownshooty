@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class Weapon : MonoBehaviour, IPickup
 {
+    [SerializeReference]
+    public Entity User;
     [SerializeField]
     public string WeaponName;
     [SerializeField]
@@ -54,9 +56,10 @@ public class Weapon : MonoBehaviour, IPickup
         }
     }
 
-    public void InitializeWeapon(Faction forFaction)
+    public void InitializeWeapon(Faction forFaction, Entity user)
     {
         this.MyFaction = forFaction;
+        this.User = user;
     }
 
     public void FireInDirection(Vector2 towardsPosition)
@@ -76,6 +79,7 @@ public class Weapon : MonoBehaviour, IPickup
 
             float projectileSpeed = Mathf.Lerp(this.minimumMovementSpeed, this.maximumMovementSpeed, this.movementSpeedCurve.Evaluate(Random.Range(0, 1f)));
             newProjectile.StartProjectile(firingDirection, this.MyFaction, projectileSpeed);
+            newProjectile.AddForceToVelocity(this.User.VelocityPerSecond, 1f);
         }
     }
 

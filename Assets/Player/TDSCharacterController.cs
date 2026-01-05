@@ -199,12 +199,13 @@ public class TDSCharacterController : Entity
 
     protected override void OnCollisionEnter2D(Collision2D collision)
     {
+        // TODO: Re-check collision after being hit, in case we're hit while on top of a healing thing
         base.OnCollisionEnter2D(collision);
         if ((this.pickupLayerMask & (1 << collision.gameObject.layer)) != 0)
         {
             IPickup pickup = collision.gameObject.GetComponentInParent<IPickup>();
 
-            if (pickup != null)
+            if (pickup != null && pickup.CanTake(this))
             {
                 this.HandlePickup(pickup);
             }

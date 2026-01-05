@@ -42,6 +42,8 @@ public class Weapon : MonoBehaviour, IPickup
     [SerializeReference]
     private GameObject fieldRoot;
     public bool IsInWorld { get; private set; }
+    [SerializeField]
+    private int spawnTickets = 1;
 
     private void Start()
     {
@@ -113,5 +115,22 @@ public class Weapon : MonoBehaviour, IPickup
     public void ApplyToCharacter(TDSCharacterController toApplyTo)
     {
         toApplyTo.OwnWeaponCollection.AddWeapon(this);
+    }
+
+    public IPickup InstantiateInstance(Vector3 position)
+    {
+        Weapon newWeapon = GameObject.Instantiate(this, position, Quaternion.Euler(0, 0, Random.Range(0, 360f)));
+        newWeapon.SetIsInWorld(true);
+        return newWeapon;
+    }
+
+    public int GetSpawnTickets()
+    {
+        return spawnTickets;
+    }
+
+    public bool CanTake(TDSCharacterController character)
+    {
+        return true;
     }
 }

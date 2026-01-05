@@ -178,7 +178,7 @@ public class SingleLevelDirector : MonoBehaviour
         for (int ii = 0; ii < weaponDropCount; ii++)
         {
             Vector2 positionToSpawn = MapGenerator.GetRandomNegativeSpacePointAtDistanceRangeFromPoints(SpatialReasoningCalculator.CurrentInstance.Chunks, currentCharacterPositions, this.minimumDistanceFromStartCircle, float.MaxValue, GeometricStampMapGenerationPlan.SUFFICIENTDISTANCEFROMWALLFORROOMLINESS);
-            this.dropManager.DoDropWeapon(positionToSpawn);
+            this.dropManager.DoDrop(positionToSpawn);
         }
 
         StaticLevelDirector.BeginLevel();

@@ -5,7 +5,11 @@ using UnityEngine;
 public class DropManager : MonoBehaviour
 {
     [SerializeField]
-    private List<Weapon> weapons = new List<Weapon>();
+    private List<Weapon> weaponDrops = new List<Weapon>();
+    [SerializeField]
+    private List<HealPickup> otherPickups = new List<HealPickup>();
+    private List<IPickup> pickups { get; set; } = new List<IPickup>();
+
     [SerializeField]
     private float dropChance = .1f;
     [SerializeReference]
@@ -14,6 +18,24 @@ public class DropManager : MonoBehaviour
     private void Start()
     {
         this.singleLevelDirector.OnEnemyDefeated += OnEnemyDefeated;
+
+        foreach (Weapon curWeapon in weaponDrops)
+        {
+            int tickets = curWeapon.GetSpawnTickets();
+            for (int ii = 0; ii < tickets; ii++)
+            {
+                this.pickups.Add(curWeapon);
+            }
+        }
+
+        foreach (HealPickup curOther in otherPickups)
+        {
+            int tickets = curOther.GetSpawnTickets();
+            for (int ii = 0; ii < tickets; ii++)
+            {
+                this.pickups.Add(curOther);
+            }
+        }
     }
     
     public void OnEnemyDefeated(Entity enemy)
@@ -23,7 +45,7 @@ public class DropManager : MonoBehaviour
 
     public void ConsiderDrop(Vector2 position)
     {
-        if (weapons.Count == 0)
+        if (weaponDrops.Count == 0 && otherPickups.Count == 0)
         {
             return;
         }
@@ -33,18 +55,17 @@ public class DropManager : MonoBehaviour
             return;
         }
 
-        this.DoDropWeapon(position);
+        this.DoDrop(position);
     }
 
-    public void DoDropWeapon(Vector2 position)
+    public IPickup DoDrop(Vector2 position)
     {
-        if (weapons.Count == 0)
+        if (weaponDrops.Count == 0 && otherPickups.Count == 0)
         {
-            return;
+            return null;
         }
 
-        Weapon pfToUse = this.weapons[Random.Range(0, this.weapons.Count)];
-        Weapon newWeapon = Instantiate(pfToUse, position, Quaternion.Euler(0, 0, Random.Range(0, 360f)));
-        newWeapon.SetIsInWorld(true);
+        IPickup pfToUse = this.pickups[Random.Range(0, this.pickups.Count)].InstantiateInstance(position);
+        return pfToUse;
     }
 }

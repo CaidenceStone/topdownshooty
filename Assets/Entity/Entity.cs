@@ -203,6 +203,20 @@ public class Entity : Mob
         this.HealthChanged?.Invoke(previousHP, this.CurrentHP, this.MaximumHP);
     }
 
+    public void TakeHeal(double damageHealed)
+    {
+        double previousHP = this.CurrentHP;
+
+        this.CurrentHP = Math.Clamp(this.CurrentHP + damageHealed, 0, this.MaximumHP);
+        this.ownPersonalHealthCanvas?.Show(this.CurrentHP, this.MaximumHP, this.secondsToShowHealthCanvasOnDamage);
+        if (this.curDamageFlickerCoroutine != null)
+        {
+            this.StopCoroutine(this.curDamageFlickerCoroutine);
+        }
+        this.curDamageFlickerCoroutine = this.StartCoroutine(DamageCoroutine());
+        this.HealthChanged?.Invoke(previousHP, this.CurrentHP, this.MaximumHP);
+    }
+
     IEnumerator DamageCoroutine()
     {
         float curDamageFlickerTime = this.damageFlickerTime;
